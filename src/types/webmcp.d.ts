@@ -1,14 +1,13 @@
 interface ModelContextTool {
   name: string;
   description: string;
-  inputSchema: {
-    type: "object";
-    properties: {
-      message: { type: "string" };
-    };
-    required: ["message"];
+  inputSchema: Record<string, unknown>;
+  annotations?: {
+    readOnlyHint?: boolean;
+    destructiveHint?: boolean;
+    idempotentHint?: boolean;
   };
-  execute: (input: { message: string }) => Promise<{
+  execute: (input: unknown) => Promise<{
     content: Array<{ type: "text"; text: string }>;
   }>;
 }

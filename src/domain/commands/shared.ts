@@ -67,6 +67,17 @@ export function executeCommand<TInput, TData>(
 
   const input = parsed.data;
 
+  if (ctx.scenarioId) {
+    return failure<TData>(
+      {
+        code: 'SCENARIO_NOT_FOUND',
+        message: 'Scenario mutation is available in a later phase.',
+        suggestion: 'Retry without scenarioId against the current process.',
+      },
+      store.stateVersion,
+    );
+  }
+
   // 2. Referential checks.
   const referentialError = definition.checkReferences?.(store.process, input);
   if (referentialError) return failure<TData>(referentialError, store.stateVersion);

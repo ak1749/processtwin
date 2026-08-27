@@ -16,7 +16,9 @@ export type CommandErrorCode =
   | 'SELF_LOOP'
   | 'END_HAS_OUTGOING'
   | 'POLICY_VIOLATION'
-  | 'LIMIT_EXCEEDED';
+  | 'LIMIT_EXCEEDED'
+  | 'BATCH_FAILED'
+  | 'SCENARIO_NOT_FOUND';
 
 export interface CommandError {
   code: CommandErrorCode;

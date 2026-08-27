@@ -7,12 +7,14 @@ import { ActivityFeed } from '../../components/activity/activity-feed';
 import { ProcessCanvas, type Selection } from '../../components/canvas/process-canvas';
 import { StepPalette } from '../../components/canvas/step-palette';
 import { ProcessInspector } from '../../components/inspector/process-inspector';
+import { WebMcpPanel } from '../../components/webmcp-panel/webmcp-panel';
 import { redoProcess } from '../../domain/commands/redo-process';
 import { undoProcess } from '../../domain/commands/undo-process';
 import { updateStep } from '../../domain/commands/update-step';
 import { autoLayout } from '../../domain/layout/auto-layout';
 import { checkPolicies, type PolicyOperation, type PolicyViolation } from '../../domain/policies';
 import { useProcessStore } from '../../stores/process-store';
+import { useWebMcp } from '../../hooks/use-webmcp';
 
 const drawerTabs = ['Activity', 'Simulation', 'Validation', 'Agent'] as const;
 
@@ -22,6 +24,7 @@ interface PendingPolicyAction {
 }
 
 export default function WorkspacePage() {
+  useWebMcp();
   const process = useProcessStore((state) => state.process);
   const past = useProcessStore((state) => state.past);
   const future = useProcessStore((state) => state.future);
@@ -84,7 +87,7 @@ export default function WorkspacePage() {
           <ProcessCanvas process={process} onSelectionChange={setSelection} runHumanAction={runHumanAction} />
           {process.nodes.length === 0 ? <div className="pointer-events-none absolute inset-0 flex items-center justify-center"><div className="max-w-sm rounded-xl border border-slate-200 bg-white/95 px-6 py-5 text-center shadow-sm"><span className="mx-auto inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600"><Sparkles size={17} /></span><h2 className="mt-3 text-sm font-semibold text-slate-900">Build your first process</h2><p className="mt-1 text-xs leading-5 text-slate-500">Add steps from the palette, connect them with handles, and edit each step in the inspector.</p></div></div> : null}
         </section>
-        <ProcessInspector process={process} selection={selection} runHumanAction={runHumanAction} />
+        {selection ? <ProcessInspector process={process} selection={selection} runHumanAction={runHumanAction} /> : <WebMcpPanel />}
       </div>
 
       <section className="min-h-0 min-w-0 border-t border-slate-200 bg-white" aria-label="Workspace drawer">
