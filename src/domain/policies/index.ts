@@ -8,22 +8,37 @@ import type {
 } from '../../types/process';
 
 export type StepChanges = Partial<
-  Pick<
-    ProcessStep,
-    | 'type'
-    | 'name'
-    | 'description'
-    | 'owner'
-    | 'duration'
-    | 'cost'
-    | 'capacityPerHour'
-    | 'position'
+  Omit<
+    Pick<
+      ProcessStep,
+      | 'type'
+      | 'name'
+      | 'description'
+      | 'owner'
+      | 'duration'
+      | 'cost'
+      | 'capacityPerHour'
+      | 'position'
+    >,
+    'description' | 'owner' | 'cost' | 'capacityPerHour'
   >
->;
+> & {
+  description?: string | null;
+  owner?: string | null;
+  cost?: number | null;
+  capacityPerHour?: number | null;
+};
 
 export type ConnectionChanges = Partial<
-  Pick<ProcessConnection, 'source' | 'target' | 'label' | 'condition' | 'probability'>
->;
+  Omit<
+    Pick<ProcessConnection, 'source' | 'target' | 'label' | 'condition' | 'probability'>,
+    'label' | 'condition' | 'probability'
+  >
+> & {
+  label?: string | null;
+  condition?: ProcessConnection['condition'] | null;
+  probability?: number | null;
+};
 
 export type PolicyOperation =
   | { kind: 'create_step'; step: ProcessStep }

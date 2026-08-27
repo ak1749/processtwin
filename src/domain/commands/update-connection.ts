@@ -10,9 +10,9 @@ const connectionChangesSchema = z
   .object({
     source: z.string().trim().min(1),
     target: z.string().trim().min(1),
-    label: z.string().trim().min(1),
-    condition: conditionSchema,
-    probability: z.number().min(0).max(1),
+    label: z.string().trim().min(1).nullable(),
+    condition: conditionSchema.nullable(),
+    probability: z.number().min(0).max(1).nullable(),
   })
   .partial()
   .refine((changes) => Object.keys(changes).length > 0, 'Provide at least one change.');
@@ -69,7 +69,11 @@ export function updateConnection(
     }),
     apply: (process, value) => {
       const connection = process.edges.find((edge) => edge.id === value.id);
-      if (connection) Object.assign(connection, value.changes);
+      if (!connection) return;
+      for (const [field, change] of Object.entries(value.changes)) {
+        if (change === null) delete connection[field as keyof ProcessConnection];
+        else Object.assign(connection, { [field]: change });
+      }
     },
     change: (before, after, value) => ({
       kind: 'update_connection',

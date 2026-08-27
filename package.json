@@ -10,7 +10,10 @@
     "verify": "tsc --noEmit && next build"
   },
   "dependencies": {
+    "@xyflow/react": "^12.11.5",
+    "dagre": "^0.8.5",
     "immer": "^11.1.18",
+    "lucide-react": "^1.34.0",
     "nanoid": "^6.0.1",
     "next": "14.2.35",
     "react": "^18",

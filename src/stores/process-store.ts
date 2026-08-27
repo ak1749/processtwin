@@ -1,4 +1,5 @@
 import { nanoid } from 'nanoid';
+import { current } from 'immer';
 import { create } from 'zustand';
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
@@ -90,7 +91,7 @@ export const useProcessStore = create<ProcessStore>()(
 
         set((state) => {
           state.past.push({
-            process: cloneProcess(state.process),
+            process: cloneProcess(current(state.process)),
             stateVersion: state.stateVersion,
           });
           state.past = state.past.slice(-HISTORY_CAP);
@@ -110,7 +111,7 @@ export const useProcessStore = create<ProcessStore>()(
           if (!previous) return;
 
           state.future.unshift({
-            process: cloneProcess(state.process),
+            process: cloneProcess(current(state.process)),
             stateVersion: state.stateVersion,
           });
           state.future = state.future.slice(0, HISTORY_CAP);
@@ -124,7 +125,7 @@ export const useProcessStore = create<ProcessStore>()(
           if (!next) return;
 
           state.past.push({
-            process: cloneProcess(state.process),
+            process: cloneProcess(current(state.process)),
             stateVersion: state.stateVersion,
           });
           state.past = state.past.slice(-HISTORY_CAP);

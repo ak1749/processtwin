@@ -10,11 +10,11 @@ const stepChangesSchema = z
   .object({
     type: stepTypeSchema,
     name: z.string().trim().min(1),
-    description: z.string().trim().min(1),
-    owner: z.string().trim().min(1),
+    description: z.string().trim().min(1).nullable(),
+    owner: z.string().trim().min(1).nullable(),
     duration: durationSchema,
-    cost: z.number().finite().nonnegative(),
-    capacityPerHour: z.number().finite().positive(),
+    cost: z.number().finite().nonnegative().nullable(),
+    capacityPerHour: z.number().finite().positive().nullable(),
     position: positionSchema,
   })
   .partial()
@@ -43,7 +43,10 @@ export function updateStep(
     apply: (process, value, now) => {
       const step = process.nodes.find((node) => node.id === value.id);
       if (!step) return;
-      Object.assign(step, value.changes);
+      for (const [field, change] of Object.entries(value.changes)) {
+        if (change === null) delete step[field as keyof ProcessStep];
+        else Object.assign(step, { [field]: change });
+      }
       step.updatedAt = now;
     },
     change: (before, after, value) => ({
