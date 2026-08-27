@@ -81,3 +81,15 @@ export const useTelemetryStore = create<TelemetryStore>((set) => ({
     });
   },
 }));
+
+export function setWebMcpSupport(support: WebMcpSupport): void {
+  useTelemetryStore.getState().setSupport(support);
+}
+
+export function syncRegisteredToolNames(names: string[]): void {
+  useTelemetryStore.getState().setRegisteredToolNames(names);
+}
+
+export function recordToolTelemetry(toolName: string, envelope: ToolEnvelope, input: unknown): void {
+  useTelemetryStore.getState().record(toolName, envelope, input);
+}

@@ -8,6 +8,9 @@ import { getProcessGraphTool } from './get-process-graph';
 import { getProcessSummaryTool } from './get-process-summary';
 import { updateConnectionTool } from './update-connection';
 import { updateStepTool } from './update-step';
+import { simulateProcessTool } from './simulate-process';
+import { validateProcessTool } from './validate-process';
+import { analyzeBottlenecksTool } from './analyze-bottlenecks';
 
 export const coreTools: ToolDef[] = [
   getProcessSummaryTool,
@@ -19,4 +22,8 @@ export const coreTools: ToolDef[] = [
   connectStepsTool,
   updateConnectionTool,
   deleteStepTool,
+  validateProcessTool,
+  simulateProcessTool,
 ];
+
+export { analyzeBottlenecksTool };

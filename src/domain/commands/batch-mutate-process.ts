@@ -24,6 +24,7 @@ const createOperationSchema = z.object({
     duration: durationSchema.default(zeroDuration),
     cost: z.number().finite().nonnegative().optional(),
     capacityPerHour: z.number().finite().positive().optional(),
+    position: positionSchema.optional(),
   }),
 });
 
@@ -197,7 +198,7 @@ function policyOperation(
   switch (operation.kind) {
     case 'create_step': {
       const id = operation.step.id ?? nanoid();
-      return { kind: 'create_step', step: { ...operation.step, id, position: { x: 0, y: 0 }, createdBy: actor, updatedAt: '' } };
+      return { kind: 'create_step', step: { ...operation.step, id, position: operation.step.position ?? { x: 0, y: 0 }, createdBy: actor, updatedAt: '' } };
     }
     case 'update_step': return { kind: 'update_step', stepId: resolveAlias(operation.id, aliases), changes: operation.changes as StepChanges };
     case 'delete_step': return { kind: 'delete_step', stepId: resolveAlias(operation.id, aliases) };
@@ -223,7 +224,7 @@ function applyOperation(
     case 'create_step': {
       const id = operation.step.id ?? nanoid();
       if (operation.tempId) aliases[operation.tempId] = id;
-      const step: ProcessStep = { ...operation.step, id, position: { x: 0, y: 0 }, createdBy: actor, updatedAt: now };
+      const step: ProcessStep = { ...operation.step, id, position: operation.step.position ?? { x: 0, y: 0 }, createdBy: actor, updatedAt: now };
       process.nodes.push(step);
       data.createdSteps.push(step);
       return;

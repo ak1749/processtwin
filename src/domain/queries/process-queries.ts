@@ -1,5 +1,7 @@
 import { useProcessStore } from '../../stores/process-store';
+import { useSimulationStore } from '../../stores/simulation-store';
 import type { BusinessProcess } from '../../types/process';
+import { validateProcess } from '../validation/validate-process';
 
 function cloneProcess(process: BusinessProcess): BusinessProcess {
   return structuredClone(process);
@@ -11,6 +13,8 @@ export function getCurrentStateVersion(): number {
 
 export function getProcessSummary() {
   const { process, stateVersion } = useProcessStore.getState();
+  const simulation = useSimulationStore.getState().result;
+  const validation = validateProcess(process);
   const startIds = process.nodes.filter((step) => step.type === 'start').map((step) => step.id);
   const endIds = process.nodes.filter((step) => step.type === 'end').map((step) => step.id);
 
@@ -28,8 +32,8 @@ export function getProcessSummary() {
       capacityPerHour: step.capacityPerHour,
     })),
     activePolicyLabels: process.policies.map((policy) => policy.label),
-    validationStatus: 'Validation is available in a later phase.',
-    latestSimulationHeadline: 'No simulation has been run.',
+    validationStatus: validation.valid ? 'No validation errors.' : `${validation.issues.filter((issue) => issue.severity === 'error').length} validation errors.`,
+    latestSimulationHeadline: simulation ? `P95 ${simulation.p95Minutes.toFixed(1)} minutes; ${(simulation.completionRate * 100).toFixed(1)}% completed.` : 'No simulation has been run.',
     stateVersion,
   };
 }

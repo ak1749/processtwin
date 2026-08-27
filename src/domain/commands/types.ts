@@ -18,7 +18,8 @@ export type CommandErrorCode =
   | 'POLICY_VIOLATION'
   | 'LIMIT_EXCEEDED'
   | 'BATCH_FAILED'
-  | 'SCENARIO_NOT_FOUND';
+  | 'SCENARIO_NOT_FOUND'
+  | 'NO_SIMULATION';
 
 export interface CommandError {
   code: CommandErrorCode;

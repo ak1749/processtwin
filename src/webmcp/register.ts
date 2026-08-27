@@ -1,4 +1,4 @@
-import { useTelemetryStore } from '../stores/telemetry-store';
+import { recordToolTelemetry, setWebMcpSupport, syncRegisteredToolNames } from '../stores/telemetry-store';
 import type { ToolDef } from './types';
 
 export interface ToolRegistry {
@@ -11,7 +11,7 @@ function modelContext() {
 }
 
 function syncRegisteredTools(registry: ToolRegistry): void {
-  useTelemetryStore.getState().setRegisteredToolNames(Array.from(registry.names).sort());
+  syncRegisteredToolNames(Array.from(registry.names).sort());
 }
 
 export function registerTool(tool: ToolDef, registry: ToolRegistry, signal: AbortSignal): boolean {
@@ -26,7 +26,7 @@ export function registerTool(tool: ToolDef, registry: ToolRegistry, signal: Abor
       annotations: tool.annotations,
       execute: async (input: unknown) => {
         const envelope = await tool.run(input);
-        useTelemetryStore.getState().record(tool.name, envelope, input);
+        recordToolTelemetry(tool.name, envelope, input);
         return { content: [{ type: 'text', text: JSON.stringify(envelope) }] };
       },
     });
@@ -60,7 +60,7 @@ export function unregisterTool(name: string, registry: ToolRegistry): void {
 
 export function registerTools(tools: ToolDef[], signal: AbortSignal): ToolRegistry {
   const registry: ToolRegistry = { names: new Set<string>() };
-  useTelemetryStore.getState().setSupport(modelContext() ? 'supported' : 'unsupported');
+  setWebMcpSupport(modelContext() ? 'supported' : 'unsupported');
   for (const tool of tools) registerTool(tool, registry, signal);
   return registry;
 }

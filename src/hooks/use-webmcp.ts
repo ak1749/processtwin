@@ -6,10 +6,12 @@ import { useProcessStore } from '../stores/process-store';
 import { useTelemetryStore } from '../stores/telemetry-store';
 import { reconcileTools } from '../webmcp/reconcile';
 import { registerTools, type ToolRegistry } from '../webmcp/register';
-import { coreTools } from '../webmcp/tools';
+import { analyzeBottlenecksTool, coreTools } from '../webmcp/tools';
+import { useSimulationStore } from '../stores/simulation-store';
 
 export function useWebMcp(): void {
   const stateVersion = useProcessStore((state) => state.stateVersion);
+  const hasSimulation = useSimulationStore((state) => state.result !== null);
   const registryRef = useRef<ToolRegistry | null>(null);
   const controllerRef = useRef<AbortController | null>(null);
   const [ready, setReady] = useState(false);
@@ -31,9 +33,9 @@ export function useWebMcp(): void {
     const controller = controllerRef.current;
     const registry = registryRef.current;
     if (!ready || !controller || !registry) return;
-    const desiredTools = stateVersion > 0 ? coreTools : [];
+    const desiredTools = stateVersion > 0 ? [...coreTools, ...(hasSimulation ? [analyzeBottlenecksTool] : [])] : [];
     reconcileTools(desiredTools, registry, controller.signal);
-  }, [ready, stateVersion]);
+  }, [hasSimulation, ready, stateVersion]);
 
   useEffect(() => {
     if (typeof document !== 'undefined' && !('modelContext' in document)) {

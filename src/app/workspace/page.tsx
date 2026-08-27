@@ -4,17 +4,21 @@ import { useCallback, useEffect, useState } from 'react';
 import { LayoutTemplate, Redo2, Sparkles, Undo2, X } from 'lucide-react';
 
 import { ActivityFeed } from '../../components/activity/activity-feed';
+import { SimulationPanel } from '../../components/simulation/simulation-panel';
 import { ProcessCanvas, type Selection } from '../../components/canvas/process-canvas';
 import { StepPalette } from '../../components/canvas/step-palette';
 import { ProcessInspector } from '../../components/inspector/process-inspector';
 import { WebMcpPanel } from '../../components/webmcp-panel/webmcp-panel';
 import { redoProcess } from '../../domain/commands/redo-process';
+import { clearProcess } from '../../domain/commands/clear-process';
+import { batchMutateProcess } from '../../domain/commands/batch-mutate-process';
 import { undoProcess } from '../../domain/commands/undo-process';
 import { updateStep } from '../../domain/commands/update-step';
 import { autoLayout } from '../../domain/layout/auto-layout';
 import { checkPolicies, type PolicyOperation, type PolicyViolation } from '../../domain/policies';
 import { useProcessStore } from '../../stores/process-store';
 import { useWebMcp } from '../../hooks/use-webmcp';
+import { createRefundTemplate } from '../../data/templates/refund';
 
 const drawerTabs = ['Activity', 'Simulation', 'Validation', 'Agent'] as const;
 
@@ -55,6 +59,19 @@ export default function WorkspacePage() {
     else action();
   }, [process]);
 
+  const loadRefundTemplate = useCallback(() => {
+    const template = createRefundTemplate();
+    clearProcess({ actor: 'human' }, {});
+    batchMutateProcess({ actor: 'human' }, {
+      operations: [
+        ...template.nodes.map((node) => ({ kind: 'create_step' as const, step: { id: node.id, type: node.type, name: node.name, ...(node.description ? { description: node.description } : {}), ...(node.owner ? { owner: node.owner } : {}), duration: node.duration, ...(node.cost === undefined ? {} : { cost: node.cost }), ...(node.capacityPerHour === undefined ? {} : { capacityPerHour: node.capacityPerHour }), position: node.position } })),
+        ...template.variables.map((variable) => ({ kind: 'set_variable' as const, variable })),
+        ...template.edges.map((connection) => ({ kind: 'connect_steps' as const, connection: { id: connection.id, source: connection.source, target: connection.target, ...(connection.label ? { label: connection.label } : {}), ...(connection.condition ? { condition: connection.condition } : {}), ...(connection.probability === undefined ? {} : { probability: connection.probability }) } })),
+      ],
+    });
+    setActiveTab('Simulation');
+  }, []);
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== 'z') return;
@@ -77,7 +94,7 @@ export default function WorkspacePage() {
           <button type="button" onClick={() => redoProcess({ actor: 'human' }, {})} disabled={future.length === 0} className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40" aria-label="Redo last edit"><Redo2 size={15} /> Redo</button>
           <button type="button" onClick={applyAutoLayout} disabled={process.nodes.length === 0} className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40" aria-label="Lay out process from left to right"><LayoutTemplate size={15} /> Layout</button>
           <button type="button" disabled className="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-400" aria-label="Current scenario">Main process</button>
-          <button type="button" disabled className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white opacity-50" aria-label="Simulation available in a later phase">Simulate</button>
+          <button type="button" onClick={() => setActiveTab('Simulation')} className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700" aria-label="Open simulation drawer">Simulate</button>
         </div>
       </header>
 
@@ -85,7 +102,7 @@ export default function WorkspacePage() {
         <StepPalette nodeCount={process.nodes.length} runHumanAction={runHumanAction} />
         <section className="relative min-h-0 min-w-0 bg-slate-50" aria-label="Process canvas area">
           <ProcessCanvas process={process} onSelectionChange={setSelection} runHumanAction={runHumanAction} />
-          {process.nodes.length === 0 ? <div className="pointer-events-none absolute inset-0 flex items-center justify-center"><div className="max-w-sm rounded-xl border border-slate-200 bg-white/95 px-6 py-5 text-center shadow-sm"><span className="mx-auto inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600"><Sparkles size={17} /></span><h2 className="mt-3 text-sm font-semibold text-slate-900">Build your first process</h2><p className="mt-1 text-xs leading-5 text-slate-500">Add steps from the palette, connect them with handles, and edit each step in the inspector.</p></div></div> : null}
+          {process.nodes.length === 0 ? <div className="pointer-events-none absolute inset-0 flex items-center justify-center"><div className="pointer-events-auto max-w-sm rounded-xl border border-slate-200 bg-white/95 px-6 py-5 text-center shadow-sm"><span className="mx-auto inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600"><Sparkles size={17} /></span><h2 className="mt-3 text-sm font-semibold text-slate-900">Build your first process</h2><p className="mt-1 text-xs leading-5 text-slate-500">Add steps from the palette, connect them with handles, and edit each step in the inspector.</p><button type="button" onClick={loadRefundTemplate} className="mt-4 rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700">Load refund template</button></div></div> : null}
         </section>
         {selection ? <ProcessInspector process={process} selection={selection} runHumanAction={runHumanAction} /> : <WebMcpPanel />}
       </div>
@@ -94,7 +111,7 @@ export default function WorkspacePage() {
         <div className="flex h-11 items-center gap-1 border-b border-slate-100 px-4" role="tablist" aria-label="Workspace drawer tabs">
           {drawerTabs.map((tab) => <button key={tab} type="button" role="tab" aria-selected={activeTab === tab} onClick={() => setActiveTab(tab)} className={`rounded-md px-3 py-1.5 text-sm font-medium ${activeTab === tab ? 'bg-slate-100 text-slate-950' : 'text-slate-500 hover:text-slate-800'}`}>{tab}</button>)}
         </div>
-        <div className="h-[calc(100%-2.75rem)]">{activeTab === 'Activity' ? <ActivityFeed /> : <p className="px-4 py-4 text-sm text-slate-500">{activeTab} is available in a later phase.</p>}</div>
+        <div className="h-[calc(100%-2.75rem)]">{activeTab === 'Activity' ? <ActivityFeed /> : activeTab === 'Simulation' ? <SimulationPanel /> : <p className="px-4 py-4 text-sm text-slate-500">{activeTab} is available in a later phase.</p>}</div>
       </section>
 
       {pendingPolicyAction ? <div role="alert" className="fixed bottom-52 right-5 z-20 w-[360px] rounded-xl border border-amber-200 bg-white p-4 shadow-lg shadow-slate-300/40"><div className="flex items-start gap-3"><span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-100 text-sm font-semibold text-amber-800">!</span><div className="min-w-0 flex-1"><h2 className="text-sm font-semibold text-slate-900">Policy warning</h2><p className="mt-1 text-sm leading-5 text-slate-600">{pendingPolicyAction.warnings[0]?.message}</p></div><button type="button" onClick={() => setPendingPolicyAction(null)} className="text-slate-400 hover:text-slate-700" aria-label="Dismiss policy warning"><X size={16} /></button></div><div className="mt-4 flex justify-end gap-2"><button type="button" onClick={() => setPendingPolicyAction(null)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">Cancel</button><button type="button" onClick={() => { pendingPolicyAction.action(); setPendingPolicyAction(null); }} className="rounded-md bg-amber-600 px-3 py-2 text-sm font-medium text-white hover:bg-amber-700">Do it anyway</button></div></div> : null}

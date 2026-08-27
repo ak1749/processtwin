@@ -1,0 +1,54 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`simulation > locks the refund template three-state numbers 1`] = `
+{
+  "A": {
+    "manager": {
+      "averageDurationMinutes": 123.87748409181546,
+      "queueWaitMinutes": 45.63380281690142,
+      "stepId": "manager-approval",
+      "stepName": "Manager approval",
+      "totalCost": 65565,
+      "totalDurationMinutes": 541468.4829653254,
+      "totalQueueWaitMinutes": 196851.33388023666,
+      "utilization": 0.43200000000000005,
+      "visitCount": 4371,
+      "visitRate": 0.4371,
+    },
+    "p50Minutes": 86.46726627730926,
+    "p95Minutes": 288.12029457331784,
+  },
+  "B": {
+    "manager": {
+      "averageDurationMinutes": 631.048720031178,
+      "queueWaitMinutes": 273.8028169014085,
+      "stepId": "manager-approval",
+      "stepName": "Manager approval",
+      "totalCost": 65565,
+      "totalDurationMinutes": 2758313.955256279,
+      "totalQueueWaitMinutes": 1181108.0032814206,
+      "utilization": 0.43200000000000005,
+      "visitCount": 4371,
+      "visitRate": 0.4371,
+    },
+    "p50Minutes": 86.51957896804169,
+    "p95Minutes": 1030.6200510777646,
+  },
+  "C": {
+    "manager": {
+      "averageDurationMinutes": 95.15569444970546,
+      "queueWaitMinutes": 16.53061224489796,
+      "stepId": "manager-approval",
+      "stepName": "Manager approval",
+      "totalCost": 65565,
+      "totalDurationMinutes": 415925.5404396626,
+      "totalQueueWaitMinutes": 71308.3913545755,
+      "utilization": 0.21600000000000003,
+      "visitCount": 4371,
+      "visitRate": 0.4371,
+    },
+    "p50Minutes": 86.26452452358771,
+    "p95Minutes": 219.81992652169282,
+  },
+}
+`;

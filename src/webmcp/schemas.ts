@@ -50,7 +50,7 @@ const createBatchOperationSchema = z.object({
     id: z.string().trim().min(1).optional(), type: stepTypeSchema, name: z.string().trim().min(1),
     description: z.string().trim().min(1).optional(), owner: z.string().trim().min(1).optional(),
     duration: durationSchema.default(zeroDuration), cost: z.number().finite().nonnegative().optional(),
-    capacityPerHour: z.number().finite().positive().optional(),
+    capacityPerHour: z.number().finite().positive().optional(), position: positionSchema.optional(),
   }),
 });
 const updateStepBatchOperationSchema = z.object({
@@ -121,6 +121,17 @@ export const deleteStepInputSchema = z.object({
   scenarioId: scenarioIdSchema,
   id: z.string().trim().min(1),
   confirm: z.boolean().default(false),
+}).strict();
+
+export const validateProcessInputSchema = z.object({ scenarioId: scenarioIdSchema }).strict();
+export const simulateProcessInputSchema = z.object({
+  iterations: z.number().int().min(100).max(50_000).default(5_000),
+  seed: z.number().int().default(42),
+  scenarioId: scenarioIdSchema,
+}).strict();
+export const analyzeBottlenecksInputSchema = z.object({
+  scenarioId: scenarioIdSchema,
+  top: z.number().int().min(1).max(100).optional(),
 }).strict();
 
 export function jsonSchema(schema: z.ZodTypeAny): JsonSchema {
