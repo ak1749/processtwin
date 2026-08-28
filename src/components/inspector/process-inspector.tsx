@@ -40,11 +40,13 @@ function NodeInspector({
   step,
   runHumanAction,
   policies,
+  variables,
   scenarioId,
 }: {
   step: ProcessStep;
   runHumanAction: ProcessInspectorProps['runHumanAction'];
   policies: BusinessProcess['policies'];
+  variables: BusinessProcess['variables'];
   scenarioId?: string;
 }) {
   const showsWorkFields = step.type === 'action' || step.type === 'approval';
@@ -111,7 +113,7 @@ function NodeInspector({
         <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-500">This step is instantaneous. Duration, cost, and capacity do not apply.</p>
       )}
       <button type="submit" className="w-full rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700 active:translate-y-px">Save changes</button>
-      <PolicyChips step={step} policies={policies} scenarioId={scenarioId} />
+      <PolicyChips step={step} policies={policies} variables={variables} scenarioId={scenarioId} />
     </form>
   );
 }
@@ -188,7 +190,7 @@ export function ProcessInspector({ process, selection, runHumanAction, scenarioI
 
   return (
     <aside className="min-h-0 overflow-y-auto bg-white p-4" aria-label="Inspector">
-      {selectedStep ? <NodeInspector key={selectedStep.id} step={selectedStep} policies={process.policies} scenarioId={scenarioId} runHumanAction={runHumanAction} /> : null}
+      {selectedStep ? <NodeInspector key={selectedStep.id} step={selectedStep} policies={process.policies} variables={process.variables} scenarioId={scenarioId} runHumanAction={runHumanAction} /> : null}
       {selectedEdge ? <EdgeInspector key={selectedEdge.id} edge={selectedEdge} scenarioId={scenarioId} runHumanAction={runHumanAction} /> : null}
       {!selectedStep && !selectedEdge ? (
         <div className="pt-8 text-center">

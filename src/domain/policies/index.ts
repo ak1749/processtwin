@@ -55,6 +55,7 @@ export interface PolicyViolation {
   policyId: string;
   label: string;
   message: string;
+  suggestion: string;
 }
 
 function cloneProcess(process: BusinessProcess): BusinessProcess {
@@ -196,10 +197,14 @@ function hasPathWithoutRequiredStep(
     const nextSeen = new Set(seen);
     nextSeen.add(node.id);
 
-    return (outgoing.get(node.id) ?? []).some((edge) => {
-      if (!edgeCouldMatchRule(edge, whenVariable, operator, value)) return false;
+    const applicableEdges = (outgoing.get(node.id) ?? []).filter((edge) =>
+      edgeCouldMatchRule(edge, whenVariable, operator, value),
+    );
+    if (applicableEdges.length === 0) return !nextHasRequiredStep;
+
+    return applicableEdges.some((edge) => {
       const next = byId.get(edge.target);
-      return next ? visit(next, nextHasRequiredStep, nextSeen) : false;
+      return next ? visit(next, nextHasRequiredStep, nextSeen) : !nextHasRequiredStep;
     });
   };
 
@@ -217,11 +222,20 @@ export function checkPolicies(
     const rule = policy.rule;
 
     if (rule.kind === 'lock_step') {
+      const deletesLockedStep = operation.kind === 'delete_step' && operation.stepId === rule.stepId;
       const changedFields: Array<keyof ProcessStep> = operation.kind === 'update_step' && operation.stepId === rule.stepId
         ? Object.keys(operation.changes) as Array<keyof ProcessStep>
         : operation.kind === 'reposition_steps' && operation.positions.some((entry) => entry.id === rule.stepId)
           ? ['position']
           : [];
+      if (deletesLockedStep) {
+        violations.push({
+          policyId: policy.id,
+          label: policy.label,
+          message: `${policy.label} prevents this locked step from being deleted.`,
+          suggestion: 'Retain the locked step and adjust another part of the process instead.',
+        });
+      }
       if (changedFields.length === 0) {
         continue;
       }
@@ -234,6 +248,7 @@ export function checkPolicies(
           policyId: policy.id,
           label: policy.label,
           message: `${policy.label} locks the ${lockedField} field on this step.`,
+          suggestion: `Leave the ${lockedField} field unchanged and adjust an unlocked step instead.`,
         });
       }
       continue;
@@ -250,6 +265,7 @@ export function checkPolicies(
           policyId: policy.id,
           label: policy.label,
           message: `${policy.label} prevents this step from being deleted.`,
+          suggestion: 'Retain the protected step and adjust another part of the process instead.',
         });
       }
       continue;
@@ -265,9 +281,10 @@ export function checkPolicies(
       )
     ) {
       violations.push({
-        policyId: policy.id,
-        label: policy.label,
-          message: `${policy.label} requires a ${rule.requiredStepType} step on this path.`,
+          policyId: policy.id,
+          label: policy.label,
+          message: `${policy.label} requires a ${rule.requiredStepType} step on every matching path.`,
+          suggestion: `Keep a ${rule.requiredStepType} step on every path where ${rule.whenVariable} ${rule.operator} ${rule.value}.`,
       });
     }
   }

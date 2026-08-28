@@ -98,12 +98,13 @@ export function executeCommand<TInput, TData>(
     definition.operation(target, input, ctx),
   );
   if (ctx.actor === 'agent' && warnings.length > 0) {
+    const violation = warnings[0];
     return failure<TData>(
       {
         code: 'POLICY_VIOLATION',
-        message: warnings[0].message,
-        details: warnings,
-        suggestion: 'Choose a change that preserves the active policy constraints.',
+        message: violation.message,
+        details: { policyId: violation.policyId, label: violation.label, violations: warnings },
+        suggestion: violation.suggestion,
       },
       store.stateVersion,
     );

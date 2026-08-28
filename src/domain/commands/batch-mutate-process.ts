@@ -287,13 +287,16 @@ function applyOperation(
 }
 
 function batchFailure(index: number, error: CommandError, stateVersion: number): CommandResult<BatchData> {
+  const policyDetails = error.code === 'POLICY_VIOLATION' && error.details && typeof error.details === 'object'
+    ? error.details as Record<string, unknown>
+    : undefined;
   return {
     ok: false,
     stateVersion,
     error: {
-      code: 'BATCH_FAILED',
+      code: error.code === 'POLICY_VIOLATION' ? 'POLICY_VIOLATION' : 'BATCH_FAILED',
       message: `Batch operation ${index} failed: ${error.message}`,
-      details: { index, reason: error },
+      details: policyDetails ? { index, ...policyDetails } : { index, reason: error },
       suggestion: error.suggestion,
     },
   };
@@ -347,11 +350,12 @@ export function batchMutateProcess(ctx: CommandContext, rawInput: unknown): Comm
     const policy = policyOperation(projected, operation, aliases, ctx.actor);
     const violations = checkPolicies(projected, policy);
     if (ctx.actor === 'agent' && violations.length > 0) {
+      const violation = violations[0];
       return batchFailure(index, {
         code: 'POLICY_VIOLATION',
-        message: violations[0].message,
-        details: violations,
-        suggestion: 'Choose a change that preserves the active policy constraints.',
+        message: violation.message,
+        details: { policyId: violation.policyId, label: violation.label, violations },
+        suggestion: violation.suggestion,
       }, store.stateVersion);
     }
     applyOperation(projected, operation, aliases, now, ctx.actor, previewData);
