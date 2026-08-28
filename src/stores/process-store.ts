@@ -115,7 +115,7 @@ export const useProcessStore = create<ProcessStore>()(
             stateVersion: state.stateVersion,
           });
           state.future = state.future.slice(0, HISTORY_CAP);
-          state.process = cloneProcess(previous.process);
+          state.process = cloneProcess(current(previous.process));
           state.stateVersion += 1;
         });
       },
@@ -129,7 +129,7 @@ export const useProcessStore = create<ProcessStore>()(
             stateVersion: state.stateVersion,
           });
           state.past = state.past.slice(-HISTORY_CAP);
-          state.process = cloneProcess(next.process);
+          state.process = cloneProcess(current(next.process));
           state.stateVersion += 1;
         });
       },

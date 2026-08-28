@@ -5,12 +5,15 @@ import type { ProcessConnection, ProcessStep } from '../../types/process';
 const NODE_WIDTH = 216;
 const NODE_HEIGHT = 126;
 
+export type LayoutDirection = 'LR' | 'TB';
+
 export function autoLayout(
   nodes: ProcessStep[],
   edges: ProcessConnection[],
+  direction: LayoutDirection = 'LR',
 ): Array<{ id: string; position: { x: number; y: number } }> {
   const graph = new dagre.graphlib.Graph();
-  graph.setGraph({ rankdir: 'LR', ranksep: 96, nodesep: 44, marginx: 48, marginy: 48 });
+  graph.setGraph({ rankdir: direction, ranksep: 96, nodesep: 44, marginx: 48, marginy: 48 });
   graph.setDefaultEdgeLabel(() => ({}));
 
   for (const node of nodes) {

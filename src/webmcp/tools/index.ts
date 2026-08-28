@@ -1,4 +1,5 @@
 import type { ToolDef } from '../types';
+import { autoLayoutTool } from './auto-layout';
 import { batchMutateProcessTool } from './batch-mutate-process';
 import { connectStepsTool } from './connect-steps';
 import { createStepTool } from './create-step';
@@ -19,6 +20,7 @@ export const coreTools: ToolDef[] = [
   getProcessGraphTool,
   getChangesSinceTool,
   batchMutateProcessTool,
+  autoLayoutTool,
   createStepTool,
   updateStepTool,
   connectStepsTool,

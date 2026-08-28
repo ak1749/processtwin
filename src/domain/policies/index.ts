@@ -43,6 +43,7 @@ export type ConnectionChanges = Partial<
 export type PolicyOperation =
   | { kind: 'create_step'; step: ProcessStep }
   | { kind: 'update_step'; stepId: string; changes: StepChanges }
+  | { kind: 'reposition_steps'; positions: Array<{ id: string; position: ProcessStep['position'] }> }
   | { kind: 'delete_step'; stepId: string }
   | { kind: 'connect_steps'; connection: ProcessConnection }
   | { kind: 'update_connection'; connectionId: string; changes: ConnectionChanges }
@@ -73,6 +74,14 @@ function projectOperation(
     case 'update_step': {
       const step = projected.nodes.find((node) => node.id === operation.stepId);
       if (step) Object.assign(step, operation.changes);
+      break;
+    }
+    case 'reposition_steps': {
+      const positions = new Map(operation.positions.map((entry) => [entry.id, entry.position]));
+      for (const step of projected.nodes) {
+        const position = positions.get(step.id);
+        if (position) step.position = position;
+      }
       break;
     }
     case 'delete_step':
@@ -208,11 +217,14 @@ export function checkPolicies(
     const rule = policy.rule;
 
     if (rule.kind === 'lock_step') {
-      if (operation.kind !== 'update_step' || operation.stepId !== rule.stepId) {
+      const changedFields: Array<keyof ProcessStep> = operation.kind === 'update_step' && operation.stepId === rule.stepId
+        ? Object.keys(operation.changes) as Array<keyof ProcessStep>
+        : operation.kind === 'reposition_steps' && operation.positions.some((entry) => entry.id === rule.stepId)
+          ? ['position']
+          : [];
+      if (changedFields.length === 0) {
         continue;
       }
-
-      const changedFields = Object.keys(operation.changes) as Array<keyof ProcessStep>;
       const lockedField = changedFields.find((field) =>
         rule.lockedFields.includes(field),
       );

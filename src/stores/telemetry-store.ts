@@ -39,6 +39,7 @@ function estimateOperationInteractionCost(operation: unknown): number {
 
 function estimateInteractions(toolName: string, input: unknown): number {
   if (!input || typeof input !== 'object') return 0;
+  if (toolName === 'auto_layout') return 1;
   if (toolName === 'batch_mutate_process' && 'operations' in input && Array.isArray(input.operations)) {
     return input.operations.reduce((total, operation) => total + estimateOperationInteractionCost(operation), 0);
   }

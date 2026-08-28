@@ -122,6 +122,10 @@ export const deleteStepInputSchema = z.object({
   id: z.string().trim().min(1),
   confirm: z.boolean().default(false),
 }).strict();
+export const autoLayoutInputSchema = z.object({
+  direction: z.enum(['LR', 'TB']).default('LR'),
+  scenarioId: scenarioIdSchema,
+}).strict();
 
 export const validateProcessInputSchema = z.object({ scenarioId: scenarioIdSchema }).strict();
 export const simulateProcessInputSchema = z.object({

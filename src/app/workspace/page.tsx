@@ -13,7 +13,7 @@ import { redoProcess } from '../../domain/commands/redo-process';
 import { clearProcess } from '../../domain/commands/clear-process';
 import { batchMutateProcess } from '../../domain/commands/batch-mutate-process';
 import { undoProcess } from '../../domain/commands/undo-process';
-import { updateStep } from '../../domain/commands/update-step';
+import { repositionSteps } from '../../domain/commands/reposition-steps';
 import { autoLayout } from '../../domain/layout/auto-layout';
 import { checkPolicies, type PolicyOperation, type PolicyViolation } from '../../domain/policies';
 import { useProcessStore } from '../../stores/process-store';
@@ -73,12 +73,15 @@ export default function WorkspacePage() {
   );
 
   const applyAutoLayout = useCallback(() => {
-    const positions = autoLayout(visibleProcess.nodes, visibleProcess.edges);
-    const operations: PolicyOperation[] = positions.map((entry) => ({ kind: 'update_step', stepId: entry.id, changes: { position: entry.position } }));
-    const warnings = operations.flatMap((operation) => checkPolicies(visibleProcess, operation));
-    const action = () => {
-      for (const entry of positions) updateStep({ actor: 'human', scenarioId: activeScenarioId ?? undefined }, { id: entry.id, changes: { position: entry.position } });
+    const operation: PolicyOperation = {
+      kind: 'reposition_steps',
+      positions: autoLayout(visibleProcess.nodes, visibleProcess.edges, 'LR'),
     };
+    const warnings = checkPolicies(visibleProcess, operation);
+    const action = () => repositionSteps(
+      { actor: 'human', scenarioId: activeScenarioId ?? undefined },
+      { direction: 'LR' },
+    );
     if (warnings.length > 0) setPendingPolicyAction({ warnings, action });
     else action();
   }, [activeScenarioId, visibleProcess]);

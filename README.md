@@ -26,6 +26,7 @@ WebMCP tool call ──┘
 | `get_process_graph` | Full process graph or a focused subgraph around selected steps. | No |
 | `get_changes_since` | Ordered change log from a state-version cursor, including the actor. | No |
 | `batch_mutate_process` | Applies a set of process mutations atomically; preferred for building or restructuring. | No |
+| `auto_layout` | Arranges the current process left-to-right or top-to-bottom as one undoable change. | No |
 | `create_step` | Creates one step for a small correction. | No |
 | `update_step` | Updates one step for a small correction. | No |
 | `connect_steps` | Connects two existing steps. | No |
