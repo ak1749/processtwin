@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod/v3';
 
 import { discardScenario, forkScenario, getScenario, mergeScenario, requestMerge, scenarioStatus } from '../scenarios';
 import { useProcessStore } from '../../stores/process-store';
@@ -6,6 +6,7 @@ import type { CommandContext, CommandResult } from './types';
 
 const forkSchema = z.object({ title: z.string().trim().min(1), reason: z.string().trim().min(1) }).strict();
 const scenarioSchema = z.object({ scenarioId: z.string().trim().min(1) }).strict();
+export const requestScenarioMergeInputSchema = scenarioSchema.extend({ summary: z.string().trim().min(1) }).strict();
 
 function invalid<T>(details: unknown): CommandResult<T> {
   return { ok: false, stateVersion: useProcessStore.getState().stateVersion, error: { code: 'INVALID_INPUT', message: 'The command input is invalid.', details } };
@@ -20,11 +21,11 @@ export function forkProcessScenario(ctx: CommandContext, input: unknown) {
 }
 
 export function requestScenarioMerge(_ctx: CommandContext, input: unknown): CommandResult<{ status: 'awaiting_human' }> {
-  const parsed = scenarioSchema.safeParse(input);
+  const parsed = requestScenarioMergeInputSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error.issues);
   const scenario = getScenario(parsed.data.scenarioId);
   if (!scenario) return { ok: false, stateVersion: useProcessStore.getState().stateVersion, error: { code: 'SCENARIO_NOT_FOUND', message: `No scenario exists with id ${parsed.data.scenarioId}.` } };
-  if (requestMerge(scenario.id) !== 'open') return { ok: false, stateVersion: useProcessStore.getState().stateVersion, error: { code: 'SCENARIO_STALE', message: 'This scenario is stale and must be re-forked before merging.' } };
+  if (requestMerge(scenario.id, parsed.data.summary) !== 'open') return { ok: false, stateVersion: useProcessStore.getState().stateVersion, error: { code: 'SCENARIO_STALE', message: 'This scenario is stale and must be re-forked before merging.' } };
   return { ok: true, stateVersion: useProcessStore.getState().stateVersion, data: { status: 'awaiting_human' } };
 }
 

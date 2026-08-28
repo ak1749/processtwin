@@ -32,3 +32,13 @@ export const coreTools: ToolDef[] = [
 ];
 
 export { analyzeBottlenecksTool, compareScenariosTool, discardScenarioTool, forkScenarioTool, getMergeStatusTool, requestMergeTool };
+
+export const allRegisteredTools: ToolDef[] = [
+  ...coreTools,
+  analyzeBottlenecksTool,
+  forkScenarioTool,
+  compareScenariosTool,
+  requestMergeTool,
+  getMergeStatusTool,
+  discardScenarioTool,
+];

@@ -9,6 +9,7 @@ export interface Scenario {
   baseVersion: number;
   process: BusinessProcess;
   status: 'open' | 'merged' | 'rejected' | 'stale';
+  mergeSummary?: string;
   simulation?: SimulationResult;
 }
 

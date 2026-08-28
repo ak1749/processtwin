@@ -1,6 +1,7 @@
 import { z } from 'zod/v3';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
+import { requestScenarioMergeInputSchema } from '../domain/commands/scenario-commands';
 import type { JsonSchema } from './types';
 
 const scenarioIdSchema = z.string().trim().min(1).optional();
@@ -139,7 +140,7 @@ export const analyzeBottlenecksInputSchema = z.object({
 }).strict();
 export const forkScenarioInputSchema = z.object({ title: z.string().trim().min(1), reason: z.string().trim().min(1) }).strict();
 export const scenarioToolInputSchema = z.object({ scenarioId: z.string().trim().min(1) }).strict();
-export const requestMergeInputSchema = scenarioToolInputSchema.extend({ summary: z.string().trim().min(1) }).strict();
+export const requestMergeInputSchema = requestScenarioMergeInputSchema;
 export const discardScenarioInputSchema = scenarioToolInputSchema.extend({ confirm: z.boolean().default(false) }).strict();
 export const listPoliciesInputSchema = z.object({ scenarioId: scenarioIdSchema }).strict();
 

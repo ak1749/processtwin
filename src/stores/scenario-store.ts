@@ -11,6 +11,7 @@ interface ScenarioStore {
   updateScenarioProcess: (id: string, process: BusinessProcess) => void;
   setScenarioSimulation: (id: string, simulation: Scenario['simulation']) => void;
   setScenarioStatus: (id: string, status: Scenario['status']) => void;
+  setScenarioMergeSummary: (id: string, mergeSummary: string) => void;
   setActiveScenarioId: (id: string | null) => void;
   setPendingMergeScenarioId: (id: string | null) => void;
   removeScenario: (id: string) => void;
@@ -34,6 +35,9 @@ export const useScenarioStore = create<ScenarioStore>((set) => ({
   })),
   setScenarioStatus: (id, status) => set((state) => ({
     scenarios: state.scenarios.map((scenario) => scenario.id === id ? { ...scenario, status } : scenario),
+  })),
+  setScenarioMergeSummary: (id, mergeSummary) => set((state) => ({
+    scenarios: state.scenarios.map((scenario) => scenario.id === id ? { ...scenario, mergeSummary } : scenario),
   })),
   setActiveScenarioId: (activeScenarioId) => set({ activeScenarioId }),
   setPendingMergeScenarioId: (pendingMergeScenarioId) => set({ pendingMergeScenarioId }),

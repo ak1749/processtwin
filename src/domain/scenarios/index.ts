@@ -80,12 +80,14 @@ export function diffScenario(id: string): ScenarioDiff | null {
   };
 }
 
-export function requestMerge(id: string): Scenario['status'] | null {
+export function requestMerge(id: string, summary: string): Scenario['status'] | null {
   const scenario = getScenario(id);
   if (!scenario) return null;
   const status = scenarioStatus(scenario);
   if (status !== 'open') return status;
-  useScenarioStore.getState().setPendingMergeScenarioId(id);
+  const store = useScenarioStore.getState();
+  store.setScenarioMergeSummary(id, summary);
+  store.setPendingMergeScenarioId(id);
   return 'open';
 }
 
