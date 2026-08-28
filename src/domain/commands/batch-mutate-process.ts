@@ -105,6 +105,7 @@ interface BatchData {
   operationCount: number;
   createdSteps: ProcessStep[];
   createdConnections: ProcessConnection[];
+  touchedStepIds: string[];
   aliases: Record<string, string>;
 }
 
@@ -229,6 +230,7 @@ function applyOperation(
       const step: ProcessStep = { ...operation.step, id, position: operation.step.position ?? { x: 0, y: 0 }, createdBy: actor, updatedAt: now };
       process.nodes.push(step);
       data.createdSteps.push(step);
+      data.touchedStepIds.push(id);
       return;
     }
     case 'update_step': {
@@ -239,12 +241,14 @@ function applyOperation(
         else Object.assign(step, { [field]: change });
       }
       step.updatedAt = now;
+      data.touchedStepIds.push(step.id);
       return;
     }
     case 'delete_step': {
       const id = resolveAlias(operation.id, aliases);
       process.nodes = process.nodes.filter((step) => step.id !== id);
       process.edges = process.edges.filter((edge) => edge.source !== id && edge.target !== id);
+      data.touchedStepIds.push(id);
       return;
     }
     case 'connect_steps': {
@@ -321,7 +325,7 @@ export function batchMutateProcess(ctx: CommandContext, rawInput: unknown): Comm
   const projected = cloneProcess(target);
   const aliases: Record<string, string> = {};
   const tempIds = new Set<string>();
-  const previewData: BatchData = { operationCount: parsed.data.operations.length, createdSteps: [], createdConnections: [], aliases };
+  const previewData: BatchData = { operationCount: parsed.data.operations.length, createdSteps: [], createdConnections: [], touchedStepIds: [], aliases };
   const now = new Date().toISOString();
 
   for (let index = 0; index < parsed.data.operations.length; index += 1) {
@@ -354,7 +358,7 @@ export function batchMutateProcess(ctx: CommandContext, rawInput: unknown): Comm
   }
 
   projected.updatedAt = now;
-  const entityIds = Array.from(new Set([...previewData.createdSteps.map((step) => step.id), ...previewData.createdConnections.map((edge) => edge.id)]));
+  const entityIds = Array.from(new Set([...previewData.touchedStepIds, ...previewData.createdConnections.map((edge) => edge.id)]));
   const change: ProcessChange = {
     actor: ctx.actor,
     kind: 'batch_mutate_process',
@@ -370,7 +374,10 @@ export function batchMutateProcess(ctx: CommandContext, rawInput: unknown): Comm
   useActivityStore.getState().append({
     actor: ctx.actor,
     action: 'batch_mutate_process',
-    title: `Applied ${previewData.operationCount} process changes in one transaction.`,
+    title: ctx.actor === 'agent'
+      ? `✨ Agent built workflow · ${previewData.createdSteps.length} steps · ${previewData.createdConnections.length} connections`
+      : `Applied ${previewData.operationCount} process changes in one transaction.`,
+    description: `${previewData.operationCount} atomic process changes were applied together.`,
     entityIds,
     undoToken: scenario ? `scenario:${scenario.id}` : `process:${stateVersion}`,
   });

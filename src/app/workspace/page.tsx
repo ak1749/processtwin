@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { LayoutTemplate, Redo2, Sparkles, Undo2, X } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Check, Copy, LayoutTemplate, Redo2, Sparkles, Undo2, X } from 'lucide-react';
 
 import { ActivityFeed } from '../../components/activity/activity-feed';
 import { SimulationPanel } from '../../components/simulation/simulation-panel';
@@ -24,6 +24,21 @@ import { ScenarioDiffDrawer } from '../../components/scenario/scenario-diff-draw
 
 const drawerTabs = ['Activity', 'Simulation', 'Validation', 'Agent'] as const;
 
+const demoPrompts = [
+  {
+    label: 'Build',
+    text: 'Build a refund workflow. Every request goes through a fraud check. Fraud-flagged requests go to investigation. Clean requests under $500 are auto-approved; $500 and above need manager approval. All successful paths issue the refund before ending. Then lay it out and validate it.',
+  },
+  {
+    label: 'Analyse',
+    text: 'What has changed since you last looked? Then simulate 10,000 cases with seed 42 and tell me which step drives our P95.',
+  },
+  {
+    label: 'Optimise',
+    text: 'Propose changes that bring P95 below four hours. Refunds above $2,000 must still require human approval. Work in a scenario and show me the diff before anything changes.',
+  },
+] as const;
+
 interface PendingPolicyAction {
   warnings: PolicyViolation[];
   action: () => void;
@@ -40,6 +55,8 @@ export default function WorkspacePage() {
   const [selection, setSelection] = useState<Selection>(null);
   const [activeTab, setActiveTab] = useState<(typeof drawerTabs)[number]>('Activity');
   const [pendingPolicyAction, setPendingPolicyAction] = useState<PendingPolicyAction | null>(null);
+  const [copiedPrompt, setCopiedPrompt] = useState<string | null>(null);
+  const hasLoadedDemoTemplate = useRef(false);
 
   const activeScenario = scenarios.find((scenario) => scenario.id === activeScenarioId);
   const visibleProcess = activeScenario?.process ?? process;
@@ -80,6 +97,22 @@ export default function WorkspacePage() {
   }, []);
 
   useEffect(() => {
+    if (hasLoadedDemoTemplate.current) return;
+    const launchMode = new URLSearchParams(window.location.search);
+    if (!launchMode.has('template') && !launchMode.has('blank')) return;
+    hasLoadedDemoTemplate.current = true;
+    if (launchMode.get('template') === 'refund') loadRefundTemplate();
+    else clearProcess({ actor: 'human' }, {});
+    window.history.replaceState({}, '', '/workspace');
+  }, [loadRefundTemplate]);
+
+  const copyPrompt = useCallback(async (label: string, text: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopiedPrompt(label);
+    window.setTimeout(() => setCopiedPrompt(null), 1500);
+  }, []);
+
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== 'z') return;
       const target = event.target as HTMLElement | null;
@@ -110,7 +143,7 @@ export default function WorkspacePage() {
         <section className={`relative min-h-0 min-w-0 bg-slate-50 ${activeScenario ? 'ring-2 ring-inset ring-violet-400' : ''}`} aria-label="Process canvas area">
           {activeScenario ? <div className="absolute left-0 right-0 top-0 z-10 flex items-center justify-between bg-violet-700 px-3 py-1.5 text-xs font-medium text-white">Scenario: {activeScenario.title} — viewing branch <button type="button" onClick={() => setActiveScenarioId(null)} className="rounded bg-white/15 px-2 py-0.5 hover:bg-white/25">View main</button></div> : null}
           <ProcessCanvas process={visibleProcess} scenarioId={activeScenario?.id} onSelectionChange={setSelection} runHumanAction={runHumanAction} />
-          {process.nodes.length === 0 ? <div className="pointer-events-none absolute inset-0 flex items-center justify-center"><div className="pointer-events-auto max-w-sm rounded-xl border border-slate-200 bg-white/95 px-6 py-5 text-center shadow-sm"><span className="mx-auto inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600"><Sparkles size={17} /></span><h2 className="mt-3 text-sm font-semibold text-slate-900">Build your first process</h2><p className="mt-1 text-xs leading-5 text-slate-500">Add steps from the palette, connect them with handles, and edit each step in the inspector.</p><button type="button" onClick={loadRefundTemplate} className="mt-4 rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700">Load refund template</button></div></div> : null}
+          {visibleProcess.nodes.length === 0 ? <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-y-auto p-6"><section className="pointer-events-auto w-full max-w-2xl rounded-xl border border-slate-200 bg-white/95 px-6 py-5 shadow-sm" aria-labelledby="empty-state-title"><div className="text-center"><span className="mx-auto inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600"><Sparkles size={17} /></span><h2 id="empty-state-title" className="mt-3 text-sm font-semibold text-slate-900">Build your first process</h2><p className="mt-1 text-xs leading-5 text-slate-500">Copy a demo prompt into ChatGPT or Codex to build, analyse, or optimise this process.</p></div><div className="mt-5 space-y-2">{demoPrompts.map((prompt) => <div key={prompt.label} className="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-3"><div className="min-w-0 flex-1"><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{prompt.label}</p><p className="mt-1 text-sm leading-5 text-slate-700">{prompt.text}</p></div><button type="button" onClick={() => void copyPrompt(prompt.label, prompt.text)} className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100" aria-label={`Copy ${prompt.label} prompt to clipboard`}>{copiedPrompt === prompt.label ? <Check size={14} /> : <Copy size={14} />} {copiedPrompt === prompt.label ? 'Copied' : 'Copy'}</button></div>)}</div></section></div> : null}
         </section>
         {selection ? <ProcessInspector process={visibleProcess} scenarioId={activeScenario?.id} selection={selection} runHumanAction={runHumanAction} /> : <WebMcpPanel />}
       </div>

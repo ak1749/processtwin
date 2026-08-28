@@ -19,3 +19,52 @@ textarea,
 select {
   font: inherit;
 }
+
+:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+@keyframes process-agent-node-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes process-agent-ring {
+  from {
+    box-shadow: 0 0 0 0 rgb(14 165 233 / 65%);
+  }
+  to {
+    box-shadow: 0 0 0 10px rgb(14 165 233 / 0%);
+  }
+}
+
+@keyframes process-agent-edit {
+  from,
+  to {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
+  50% {
+    outline-color: #0284c7;
+    outline-offset: 4px;
+  }
+}
+
+.pt-node-agent-created {
+  animation: process-agent-node-enter 250ms ease-out, process-agent-ring 250ms ease-out;
+}
+
+.pt-node-agent-edited {
+  animation: process-agent-edit 250ms ease-out;
+}
+
+.pt-node-agent-created.pt-node-agent-edited {
+  animation: process-agent-node-enter 250ms ease-out, process-agent-ring 250ms ease-out;
+}

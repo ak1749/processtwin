@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Bot, History, RotateCcw, UserRound } from 'lucide-react';
+import { Bot, ChevronDown, ChevronRight, History, RotateCcw, UserRound } from 'lucide-react';
 
 import { undoProcess } from '../../domain/commands/undo-process';
 import { useActivityStore, type ActivityEvent } from '../../stores/activity-store';
@@ -19,20 +19,27 @@ function relativeTime(timestamp: string, now: number): string {
 
 function ActivityRow({ event, canUndo }: { event: ActivityEvent; canUndo: boolean }) {
   const [now, setNow] = useState(() => Date.now());
+  const [expanded, setExpanded] = useState(false);
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 15_000);
     return () => window.clearInterval(timer);
   }, []);
   const isAgent = event.actor === 'agent';
 
+  const isBatch = event.action === 'batch_mutate_process';
+
   return (
-    <li className="flex min-w-[260px] items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5">
+    <li className="flex min-w-[280px] items-start gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5">
       <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${isAgent ? 'bg-sky-100 text-sky-700' : 'bg-slate-100 text-slate-700'}`} aria-label={isAgent ? 'Agent action' : 'Human action'}>
         {isAgent ? <Bot size={14} /> : <UserRound size={14} />}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-slate-800">{event.title}</p>
+        <div className="flex min-w-0 items-center gap-1">
+          {isBatch ? <button type="button" onClick={() => setExpanded((value) => !value)} className="shrink-0 rounded text-slate-500 hover:text-slate-800" aria-label={expanded ? `Collapse ${event.title}` : `Expand ${event.title}`}>{expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}</button> : null}
+          <p className="truncate text-sm font-medium text-slate-800">{event.title}</p>
+        </div>
         <p className="mt-0.5 text-xs text-slate-500">{relativeTime(event.timestamp, now)}</p>
+        {isBatch && expanded ? <p className="mt-2 text-xs leading-5 text-slate-500">{event.description ?? 'This transaction was applied atomically.'}</p> : null}
       </div>
       <button
         type="button"

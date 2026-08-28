@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Background,
   Controls,
@@ -22,6 +22,7 @@ import { deleteConnection } from '../../domain/commands/delete-connection';
 import { deleteStep } from '../../domain/commands/delete-step';
 import { updateStep } from '../../domain/commands/update-step';
 import type { PolicyOperation } from '../../domain/policies';
+import { useProcessStore } from '../../stores/process-store';
 import type { BusinessProcess, ProcessConnection } from '../../types/process';
 import { processNodeTypes, type ProcessFlowNode } from './process-node';
 
@@ -37,7 +38,7 @@ interface ProcessCanvasProps {
   runHumanAction: (action: () => void, operation: PolicyOperation) => void;
 }
 
-function toFlowNodes(process: BusinessProcess): ProcessFlowNode[] {
+function toFlowNodes(process: BusinessProcess, agentEditedNodeIds = new Set<string>()): ProcessFlowNode[] {
   const policyLabels = new Map<string, string[]>();
   for (const policy of process.policies) {
     const stepId = policy.rule.kind === 'require_step_on_path' ? undefined : policy.rule.stepId;
@@ -47,7 +48,7 @@ function toFlowNodes(process: BusinessProcess): ProcessFlowNode[] {
     id: step.id,
     type: step.type,
     position: step.position,
-    data: { step, policyLabels: policyLabels.get(step.id) ?? [] },
+    data: { step, policyLabels: policyLabels.get(step.id) ?? [], agentEdited: agentEditedNodeIds.has(step.id) },
   }));
 }
 
@@ -57,7 +58,6 @@ function toFlowEdges(connections: ProcessConnection[]): Edge[] {
     source: connection.source,
     target: connection.target,
     label: connection.label,
-    animated: connection.createdBy === 'agent',
     style: { stroke: connection.createdBy === 'agent' ? '#38bdf8' : '#64748b', strokeWidth: 1.5 },
     labelStyle: { fill: '#475569', fontSize: 11, fontWeight: 600 },
     labelBgStyle: { fill: '#ffffff', fillOpacity: 0.9 },
@@ -68,9 +68,27 @@ function toFlowEdges(connections: ProcessConnection[]): Edge[] {
 export function ProcessCanvas({ process, scenarioId, onSelectionChange, runHumanAction }: ProcessCanvasProps) {
   const [nodes, setNodes] = useNodesState<ProcessFlowNode>(toFlowNodes(process));
   const [edges, setEdges] = useEdgesState(toFlowEdges(process.edges));
+  const [agentEditedNodeIds, setAgentEditedNodeIds] = useState<Set<string>>(() => new Set());
+  const deltaLog = useProcessStore((state) => state.deltaLog);
+  const hasSeenDeltaLog = useRef(false);
 
-  useEffect(() => setNodes(toFlowNodes(process)), [process, setNodes]);
+  useEffect(() => setNodes(toFlowNodes(process, agentEditedNodeIds)), [agentEditedNodeIds, process, setNodes]);
   useEffect(() => setEdges(toFlowEdges(process.edges)), [process.edges, setEdges]);
+
+  useEffect(() => {
+    const latestChange = deltaLog.at(-1);
+    if (!hasSeenDeltaLog.current) {
+      hasSeenDeltaLog.current = true;
+      return;
+    }
+    if (!latestChange || latestChange.actor !== 'agent') return;
+
+    const changedNodeIds = latestChange.entityIds.filter((id) => process.nodes.some((step) => step.id === id));
+    if (changedNodeIds.length === 0) return;
+    setAgentEditedNodeIds(new Set(changedNodeIds));
+    const timer = window.setTimeout(() => setAgentEditedNodeIds(new Set()), 250);
+    return () => window.clearTimeout(timer);
+  }, [deltaLog, process.nodes]);
 
   const onNodesChange = useCallback(
     (changes: NodeChange<ProcessFlowNode>[]) => {

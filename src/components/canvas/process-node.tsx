@@ -12,7 +12,11 @@ import {
 
 import type { ProcessStep, StepType } from '../../types/process';
 
-export type ProcessFlowNode = Node<{ step: ProcessStep; policyLabels: string[] }, StepType>;
+export type ProcessFlowNode = Node<{
+  step: ProcessStep;
+  policyLabels: string[];
+  agentEdited?: boolean;
+}, StepType>;
 
 const nodeAppearance: Record<StepType, { icon: LucideIcon; label: string; accent: string }> = {
   start: { icon: Play, label: 'Start', accent: 'border-emerald-300 bg-emerald-50 text-emerald-800' },
@@ -36,9 +40,9 @@ function StepNode({ data, selected }: NodeProps<ProcessFlowNode>) {
 
   return (
     <div
-      className={`relative w-[216px] rounded-xl border bg-white px-3 py-3 shadow-sm transition-shadow ${
+      className={`relative w-[216px] rounded-xl border bg-white px-3 py-3 shadow-sm ${
         selected ? 'border-slate-900 ring-2 ring-slate-300' : 'border-slate-200'
-      } ${agentCreated ? 'bg-sky-50/70 ring-1 ring-sky-200' : ''}`}
+      } ${agentCreated ? 'pt-node-agent-created bg-sky-50/70 ring-1 ring-sky-200' : ''} ${data.agentEdited ? 'pt-node-agent-edited' : ''}`}
     >
       <Handle type="target" position={Position.Left} className="!h-2.5 !w-2.5 !border-2 !border-white !bg-slate-500" />
       <Handle type="source" position={Position.Right} className="!h-2.5 !w-2.5 !border-2 !border-white !bg-slate-500" />
