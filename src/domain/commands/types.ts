@@ -19,6 +19,7 @@ export type CommandErrorCode =
   | 'LIMIT_EXCEEDED'
   | 'BATCH_FAILED'
   | 'SCENARIO_NOT_FOUND'
+  | 'SCENARIO_STALE'
   | 'NO_SIMULATION';
 
 export interface CommandError {

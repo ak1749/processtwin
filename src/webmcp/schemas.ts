@@ -133,6 +133,11 @@ export const analyzeBottlenecksInputSchema = z.object({
   scenarioId: scenarioIdSchema,
   top: z.number().int().min(1).max(100).optional(),
 }).strict();
+export const forkScenarioInputSchema = z.object({ title: z.string().trim().min(1), reason: z.string().trim().min(1) }).strict();
+export const scenarioToolInputSchema = z.object({ scenarioId: z.string().trim().min(1) }).strict();
+export const requestMergeInputSchema = scenarioToolInputSchema.extend({ summary: z.string().trim().min(1) }).strict();
+export const discardScenarioInputSchema = scenarioToolInputSchema.extend({ confirm: z.boolean().default(false) }).strict();
+export const listPoliciesInputSchema = z.object({ scenarioId: scenarioIdSchema }).strict();
 
 export function jsonSchema(schema: z.ZodTypeAny): JsonSchema {
   return zodToJsonSchema(schema) as JsonSchema;

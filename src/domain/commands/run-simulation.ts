@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { simulateProcess } from '../simulation/simulate';
 import { useProcessStore } from '../../stores/process-store';
 import { useSimulationStore } from '../../stores/simulation-store';
+import { getScenario } from '../scenarios';
+import { useScenarioStore } from '../../stores/scenario-store';
 import type { SimulationResult } from '../../types/simulation';
 import type { CommandContext, CommandResult } from './types';
 
@@ -15,8 +17,10 @@ export function runSimulation(ctx: CommandContext, input: unknown): CommandResul
   const store = useProcessStore.getState();
   const parsed = runSimulationSchema.safeParse(input);
   if (!parsed.success) return { ok: false, stateVersion: store.stateVersion, error: { code: 'INVALID_INPUT', message: 'The command input is invalid.', details: parsed.error.issues } };
-  if (ctx.scenarioId) return { ok: false, stateVersion: store.stateVersion, error: { code: 'SCENARIO_NOT_FOUND', message: 'Scenario simulation is available in a later phase.', suggestion: 'Retry without scenarioId against the current process.' } };
-  const result = simulateProcess(store.process, parsed.data);
-  useSimulationStore.getState().setResult(result);
+  const scenario = ctx.scenarioId ? getScenario(ctx.scenarioId) : undefined;
+  if (ctx.scenarioId && !scenario) return { ok: false, stateVersion: store.stateVersion, error: { code: 'SCENARIO_NOT_FOUND', message: `No scenario exists with id ${ctx.scenarioId}.` } };
+  const result = simulateProcess(scenario?.process ?? store.process, parsed.data);
+  if (scenario) useScenarioStore.getState().setScenarioSimulation(scenario.id, result);
+  else useSimulationStore.getState().setResult(result);
   return { ok: true, stateVersion: store.stateVersion, data: result };
 }

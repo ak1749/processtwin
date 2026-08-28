@@ -3,6 +3,8 @@ import { produce } from 'immer';
 import { checkPolicies } from '../policies';
 import { useActivityStore } from '../../stores/activity-store';
 import { useProcessStore } from '../../stores/process-store';
+import { getScenario, scenarioStatus } from '../scenarios';
+import { useScenarioStore } from '../../stores/scenario-store';
 import type { BusinessProcess } from '../../types/process';
 import type {
   CommandContext,
@@ -67,29 +69,33 @@ export function executeCommand<TInput, TData>(
 
   const input = parsed.data;
 
-  if (ctx.scenarioId) {
+  const scenario = ctx.scenarioId ? getScenario(ctx.scenarioId) : undefined;
+  if (ctx.scenarioId && !scenario) {
     return failure<TData>(
       {
         code: 'SCENARIO_NOT_FOUND',
-        message: 'Scenario mutation is available in a later phase.',
-        suggestion: 'Retry without scenarioId against the current process.',
+        message: `No scenario exists with id ${ctx.scenarioId}.`,
       },
       store.stateVersion,
     );
   }
+  if (scenario && scenarioStatus(scenario) !== 'open') {
+    return failure<TData>({ code: 'SCENARIO_STALE', message: 'This scenario is stale and cannot accept further changes.', suggestion: 'Fork a fresh scenario from the current main process.' }, store.stateVersion);
+  }
+  const target = scenario?.process ?? store.process;
 
   // 2. Referential checks.
-  const referentialError = definition.checkReferences?.(store.process, input);
+  const referentialError = definition.checkReferences?.(target, input);
   if (referentialError) return failure<TData>(referentialError, store.stateVersion);
 
   // 3. Limit checks.
-  const limitError = definition.checkLimits?.(store.process, input);
+  const limitError = definition.checkLimits?.(target, input);
   if (limitError) return failure<TData>(limitError, store.stateVersion);
 
   // 4. Policy check.
   const warnings = checkPolicies(
-    store.process,
-    definition.operation(store.process, input, ctx),
+    target,
+    definition.operation(target, input, ctx),
   );
   if (ctx.actor === 'agent' && warnings.length > 0) {
     return failure<TData>(
@@ -104,9 +110,9 @@ export function executeCommand<TInput, TData>(
   }
 
   // 5. Apply via immer.
-  const before = cloneProcess(store.process);
+  const before = cloneProcess(target);
   const now = new Date().toISOString();
-  const after = produce(store.process, (draft) => {
+  const after = produce(target, (draft) => {
     definition.apply(draft, input, now, ctx);
     draft.updatedAt = now;
   });
@@ -114,14 +120,10 @@ export function executeCommand<TInput, TData>(
   const change = definition.change(before, after, input);
 
   // 6. Bump stateVersion, push undo state, and append a delta record.
-  const stateVersion = useProcessStore.getState().commitMutation(after, {
-    actor: ctx.actor,
-    kind: change.kind,
-    entityIds: change.entityIds,
-    summary: change.summary,
-    before: change.before,
-    after: change.after,
-  });
+  const stateVersion = scenario
+    ? store.stateVersion
+    : useProcessStore.getState().commitMutation(after, { actor: ctx.actor, kind: change.kind, entityIds: change.entityIds, summary: change.summary, before: change.before, after: change.after });
+  if (scenario) useScenarioStore.getState().updateScenarioProcess(scenario.id, after);
 
   // 7. Append activity event.
   useActivityStore.getState().append({
@@ -129,7 +131,7 @@ export function executeCommand<TInput, TData>(
     action: change.kind,
     title: change.summary,
     entityIds: change.entityIds,
-    undoToken: `process:${stateVersion}`,
+    undoToken: scenario ? `scenario:${scenario.id}` : `process:${stateVersion}`,
   });
 
   // 8. Return CommandResult.

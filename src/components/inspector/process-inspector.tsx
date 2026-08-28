@@ -8,11 +8,13 @@ import { updateStep } from '../../domain/commands/update-step';
 import type { PolicyOperation } from '../../domain/policies';
 import type { BusinessProcess, Operator, ProcessConnection, ProcessStep } from '../../types/process';
 import type { Selection } from '../canvas/process-canvas';
+import { PolicyChips } from './policy-chips';
 
 interface ProcessInspectorProps {
   process: BusinessProcess;
   selection: Selection;
   runHumanAction: (action: () => void, operation: PolicyOperation) => void;
+  scenarioId?: string;
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -37,9 +39,13 @@ const operators: Array<{ value: Operator; label: string }> = [
 function NodeInspector({
   step,
   runHumanAction,
+  policies,
+  scenarioId,
 }: {
   step: ProcessStep;
   runHumanAction: ProcessInspectorProps['runHumanAction'];
+  policies: BusinessProcess['policies'];
+  scenarioId?: string;
 }) {
   const showsWorkFields = step.type === 'action' || step.type === 'approval';
   const showsDescription = step.type !== 'start' && step.type !== 'end';
@@ -71,7 +77,7 @@ function NodeInspector({
 
     runHumanAction(
       () => {
-        updateStep({ actor: 'human' }, { id: step.id, changes });
+        updateStep({ actor: 'human', scenarioId }, { id: step.id, changes });
       },
       { kind: 'update_step', stepId: step.id, changes },
     );
@@ -105,6 +111,7 @@ function NodeInspector({
         <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-500">This step is instantaneous. Duration, cost, and capacity do not apply.</p>
       )}
       <button type="submit" className="w-full rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700 active:translate-y-px">Save changes</button>
+      <PolicyChips step={step} policies={policies} scenarioId={scenarioId} />
     </form>
   );
 }
@@ -112,9 +119,11 @@ function NodeInspector({
 function EdgeInspector({
   edge,
   runHumanAction,
+  scenarioId,
 }: {
   edge: ProcessConnection;
   runHumanAction: ProcessInspectorProps['runHumanAction'];
+  scenarioId?: string;
 }) {
   const [hasCondition, setHasCondition] = useState(Boolean(edge.condition));
 
@@ -140,7 +149,7 @@ function EdgeInspector({
     };
     runHumanAction(
       () => {
-        updateConnection({ actor: 'human' }, { id: edge.id, changes });
+        updateConnection({ actor: 'human', scenarioId }, { id: edge.id, changes });
       },
       { kind: 'update_connection', connectionId: edge.id, changes },
     );
@@ -173,14 +182,14 @@ function EdgeInspector({
   );
 }
 
-export function ProcessInspector({ process, selection, runHumanAction }: ProcessInspectorProps) {
+export function ProcessInspector({ process, selection, runHumanAction, scenarioId }: ProcessInspectorProps) {
   const selectedStep = selection?.kind === 'node' ? process.nodes.find((step) => step.id === selection.id) : undefined;
   const selectedEdge = selection?.kind === 'edge' ? process.edges.find((edge) => edge.id === selection.id) : undefined;
 
   return (
     <aside className="min-h-0 overflow-y-auto bg-white p-4" aria-label="Inspector">
-      {selectedStep ? <NodeInspector key={selectedStep.id} step={selectedStep} runHumanAction={runHumanAction} /> : null}
-      {selectedEdge ? <EdgeInspector key={selectedEdge.id} edge={selectedEdge} runHumanAction={runHumanAction} /> : null}
+      {selectedStep ? <NodeInspector key={selectedStep.id} step={selectedStep} policies={process.policies} scenarioId={scenarioId} runHumanAction={runHumanAction} /> : null}
+      {selectedEdge ? <EdgeInspector key={selectedEdge.id} edge={selectedEdge} scenarioId={scenarioId} runHumanAction={runHumanAction} /> : null}
       {!selectedStep && !selectedEdge ? (
         <div className="pt-8 text-center">
           <span className="mx-auto inline-flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500"><SlidersHorizontal size={19} /></span>

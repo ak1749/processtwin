@@ -5,13 +5,14 @@ import {
   Flag,
   GitBranch,
   Play,
+  LockKeyhole,
   Sparkles,
   type LucideIcon,
 } from 'lucide-react';
 
 import type { ProcessStep, StepType } from '../../types/process';
 
-export type ProcessFlowNode = Node<{ step: ProcessStep }, StepType>;
+export type ProcessFlowNode = Node<{ step: ProcessStep; policyLabels: string[] }, StepType>;
 
 const nodeAppearance: Record<StepType, { icon: LucideIcon; label: string; accent: string }> = {
   start: { icon: Play, label: 'Start', accent: 'border-emerald-300 bg-emerald-50 text-emerald-800' },
@@ -31,6 +32,7 @@ function StepNode({ data, selected }: NodeProps<ProcessFlowNode>) {
   const appearance = nodeAppearance[step.type];
   const Icon = appearance.icon;
   const agentCreated = step.createdBy === 'agent';
+  const constrained = data.policyLabels.length > 0;
 
   return (
     <div
@@ -49,6 +51,7 @@ function StepNode({ data, selected }: NodeProps<ProcessFlowNode>) {
           <Sparkles size={11} strokeWidth={2} />
         </span>
       ) : null}
+      {constrained ? <span className="absolute -left-2 -top-2 inline-flex h-5 w-5 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-700" title={data.policyLabels.join(', ')} aria-label={`Constrained by ${data.policyLabels.join(', ')}`}><LockKeyhole size={11} /></span> : null}
       <div className="flex items-start gap-2">
         <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border ${appearance.accent}`}>
           <Icon size={15} strokeWidth={2} />

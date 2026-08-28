@@ -5,6 +5,8 @@ import { checkProcessLimit } from '../limits';
 import { checkPolicies, type ConnectionChanges, type PolicyOperation, type StepChanges } from '../policies';
 import { useActivityStore } from '../../stores/activity-store';
 import { useProcessStore, type ProcessChange } from '../../stores/process-store';
+import { getScenario, scenarioStatus } from '../scenarios';
+import { useScenarioStore } from '../../stores/scenario-store';
 import type { BusinessProcess, ProcessConnection, ProcessStep } from '../../types/process';
 import { conditionSchema, durationSchema, positionSchema, stepTypeSchema, variableSchema } from './schemas';
 import { edgeNotFoundError, stepNotFoundError } from './shared';
@@ -310,11 +312,13 @@ export function batchMutateProcess(ctx: CommandContext, rawInput: unknown): Comm
     }
     return { ok: false, stateVersion: store.stateVersion, error: { code: 'INVALID_INPUT', message: 'The command input is invalid.', details: parsed.error.issues } };
   }
-  if (ctx.scenarioId ?? parsed.data.scenarioId) {
-    return { ok: false, stateVersion: store.stateVersion, error: { code: 'SCENARIO_NOT_FOUND', message: 'Scenario mutation is available in a later phase.', suggestion: 'Retry without scenarioId against the current process.' } };
-  }
+  const scenarioId = ctx.scenarioId ?? parsed.data.scenarioId;
+  const scenario = scenarioId ? getScenario(scenarioId) : undefined;
+  if (scenarioId && !scenario) return { ok: false, stateVersion: store.stateVersion, error: { code: 'SCENARIO_NOT_FOUND', message: `No scenario exists with id ${scenarioId}.` } };
+  if (scenario && scenarioStatus(scenario) !== 'open') return { ok: false, stateVersion: store.stateVersion, error: { code: 'SCENARIO_STALE', message: 'This scenario is stale and cannot accept further changes.', suggestion: 'Fork a fresh scenario from the current main process.' } };
 
-  const projected = cloneProcess(store.process);
+  const target = scenario?.process ?? store.process;
+  const projected = cloneProcess(target);
   const aliases: Record<string, string> = {};
   const tempIds = new Set<string>();
   const previewData: BatchData = { operationCount: parsed.data.operations.length, createdSteps: [], createdConnections: [], aliases };
@@ -356,16 +360,19 @@ export function batchMutateProcess(ctx: CommandContext, rawInput: unknown): Comm
     kind: 'batch_mutate_process',
     entityIds,
     summary: `Applied ${previewData.operationCount} process changes in one transaction.`,
-    before: store.process,
+    before: target,
     after: projected,
   };
-  const stateVersion = useProcessStore.getState().commitMutation(projected, change);
+  const stateVersion = scenario
+    ? store.stateVersion
+    : useProcessStore.getState().commitMutation(projected, change);
+  if (scenario) useScenarioStore.getState().updateScenarioProcess(scenario.id, projected);
   useActivityStore.getState().append({
     actor: ctx.actor,
     action: 'batch_mutate_process',
     title: `Applied ${previewData.operationCount} process changes in one transaction.`,
     entityIds,
-    undoToken: `process:${stateVersion}`,
+    undoToken: scenario ? `scenario:${scenario.id}` : `process:${stateVersion}`,
   });
   return { ok: true, stateVersion, data: previewData };
 }

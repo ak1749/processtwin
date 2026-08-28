@@ -11,6 +11,8 @@ import { updateStepTool } from './update-step';
 import { simulateProcessTool } from './simulate-process';
 import { validateProcessTool } from './validate-process';
 import { analyzeBottlenecksTool } from './analyze-bottlenecks';
+import { listPoliciesTool } from './list-policies';
+import { compareScenariosTool, discardScenarioTool, forkScenarioTool, getMergeStatusTool, requestMergeTool } from './scenario-tools';
 
 export const coreTools: ToolDef[] = [
   getProcessSummaryTool,
@@ -24,6 +26,7 @@ export const coreTools: ToolDef[] = [
   deleteStepTool,
   validateProcessTool,
   simulateProcessTool,
+  listPoliciesTool,
 ];
 
-export { analyzeBottlenecksTool };
+export { analyzeBottlenecksTool, compareScenariosTool, discardScenarioTool, forkScenarioTool, getMergeStatusTool, requestMergeTool };

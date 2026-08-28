@@ -22,7 +22,7 @@ import { deleteConnection } from '../../domain/commands/delete-connection';
 import { deleteStep } from '../../domain/commands/delete-step';
 import { updateStep } from '../../domain/commands/update-step';
 import type { PolicyOperation } from '../../domain/policies';
-import type { BusinessProcess, ProcessConnection, ProcessStep } from '../../types/process';
+import type { BusinessProcess, ProcessConnection } from '../../types/process';
 import { processNodeTypes, type ProcessFlowNode } from './process-node';
 
 export type Selection =
@@ -32,16 +32,22 @@ export type Selection =
 
 interface ProcessCanvasProps {
   process: BusinessProcess;
+  scenarioId?: string;
   onSelectionChange: (selection: Selection) => void;
   runHumanAction: (action: () => void, operation: PolicyOperation) => void;
 }
 
-function toFlowNodes(steps: ProcessStep[]): ProcessFlowNode[] {
-  return steps.map((step) => ({
+function toFlowNodes(process: BusinessProcess): ProcessFlowNode[] {
+  const policyLabels = new Map<string, string[]>();
+  for (const policy of process.policies) {
+    const stepId = policy.rule.kind === 'require_step_on_path' ? undefined : policy.rule.stepId;
+    if (stepId) policyLabels.set(stepId, [...(policyLabels.get(stepId) ?? []), policy.label]);
+  }
+  return process.nodes.map((step) => ({
     id: step.id,
     type: step.type,
     position: step.position,
-    data: { step },
+    data: { step, policyLabels: policyLabels.get(step.id) ?? [] },
   }));
 }
 
@@ -59,11 +65,11 @@ function toFlowEdges(connections: ProcessConnection[]): Edge[] {
   }));
 }
 
-export function ProcessCanvas({ process, onSelectionChange, runHumanAction }: ProcessCanvasProps) {
-  const [nodes, setNodes] = useNodesState<ProcessFlowNode>(toFlowNodes(process.nodes));
+export function ProcessCanvas({ process, scenarioId, onSelectionChange, runHumanAction }: ProcessCanvasProps) {
+  const [nodes, setNodes] = useNodesState<ProcessFlowNode>(toFlowNodes(process));
   const [edges, setEdges] = useEdgesState(toFlowEdges(process.edges));
 
-  useEffect(() => setNodes(toFlowNodes(process.nodes)), [process.nodes, setNodes]);
+  useEffect(() => setNodes(toFlowNodes(process)), [process, setNodes]);
   useEffect(() => setEdges(toFlowEdges(process.edges)), [process.edges, setEdges]);
 
   const onNodesChange = useCallback(
@@ -76,13 +82,13 @@ export function ProcessCanvas({ process, onSelectionChange, runHumanAction }: Pr
         const position = change.position;
         runHumanAction(
           () => {
-            updateStep({ actor: 'human' }, { id: step.id, changes: { position } });
+            updateStep({ actor: 'human', scenarioId }, { id: step.id, changes: { position } });
           },
           { kind: 'update_step', stepId: step.id, changes: { position } },
         );
       }
     },
-    [process.nodes, runHumanAction, setNodes],
+    [process.nodes, runHumanAction, scenarioId, setNodes],
   );
 
   const onEdgesChange = useCallback(
@@ -102,12 +108,12 @@ export function ProcessCanvas({ process, onSelectionChange, runHumanAction }: Pr
       };
       runHumanAction(
         () => {
-          connectSteps({ actor: 'human' }, candidate);
+          connectSteps({ actor: 'human', scenarioId }, candidate);
         },
         { kind: 'connect_steps', connection: candidate },
       );
     },
-    [runHumanAction],
+    [runHumanAction, scenarioId],
   );
 
   const onNodesDelete = useCallback(
@@ -115,13 +121,13 @@ export function ProcessCanvas({ process, onSelectionChange, runHumanAction }: Pr
       for (const node of deleted) {
         runHumanAction(
           () => {
-            deleteStep({ actor: 'human' }, { id: node.id, confirm: true });
+            deleteStep({ actor: 'human', scenarioId }, { id: node.id, confirm: true });
           },
           { kind: 'delete_step', stepId: node.id },
         );
       }
     },
-    [runHumanAction],
+    [runHumanAction, scenarioId],
   );
 
   const onEdgesDelete = useCallback(
@@ -129,13 +135,13 @@ export function ProcessCanvas({ process, onSelectionChange, runHumanAction }: Pr
       for (const edge of deleted) {
         runHumanAction(
           () => {
-            deleteConnection({ actor: 'human' }, { id: edge.id });
+            deleteConnection({ actor: 'human', scenarioId }, { id: edge.id });
           },
           { kind: 'delete_connection', connectionId: edge.id },
         );
       }
     },
-    [runHumanAction],
+    [runHumanAction, scenarioId],
   );
 
   const nodeTypes = useMemo(() => processNodeTypes, []);

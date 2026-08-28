@@ -8,6 +8,7 @@ import type { ProcessStep, StepType } from '../../types/process';
 
 interface StepPaletteProps {
   nodeCount: number;
+  scenarioId?: string;
   runHumanAction: (action: () => void, operation: PolicyOperation) => void;
 }
 
@@ -38,7 +39,7 @@ function initialStep(type: StepType, index: number): Omit<ProcessStep, 'id' | 'c
   };
 }
 
-export function StepPalette({ nodeCount, runHumanAction }: StepPaletteProps) {
+export function StepPalette({ nodeCount, scenarioId, runHumanAction }: StepPaletteProps) {
   function addStep(type: StepType) {
     const step = initialStep(type, nodeCount);
     const operationStep: ProcessStep = {
@@ -49,7 +50,7 @@ export function StepPalette({ nodeCount, runHumanAction }: StepPaletteProps) {
     };
     runHumanAction(
       () => {
-        createStep({ actor: 'human' }, step);
+        createStep({ actor: 'human', scenarioId }, step);
       },
       { kind: 'create_step', step: operationStep },
     );
