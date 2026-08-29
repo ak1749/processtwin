@@ -19,5 +19,11 @@ export interface ScenarioDiff {
   modified: Array<{ stepId: string; field: string; before: unknown; after: unknown }>;
   edgesAdded: ProcessConnection[];
   edgesRemoved: ProcessConnection[];
+  edgesModified: Array<{
+    edgeId: string;
+    before: ProcessConnection;
+    after: ProcessConnection;
+    changedFields: Array<'source' | 'target' | 'label' | 'condition' | 'probability'>;
+  }>;
   policyConflicts: Array<{ policyId: string; label: string }>;
 }

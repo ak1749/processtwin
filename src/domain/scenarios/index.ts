@@ -4,7 +4,7 @@ import { useProcessStore } from '../../stores/process-store';
 import { useScenarioStore } from '../../stores/scenario-store';
 import { useSimulationStore } from '../../stores/simulation-store';
 import { simulateProcess } from '../simulation/simulate';
-import type { Actor, BusinessProcess, ProcessPolicy, ProcessStep } from '../../types/process';
+import type { Actor, BusinessProcess, ProcessConnection, ProcessPolicy, ProcessStep } from '../../types/process';
 import type { Scenario, ScenarioDiff } from './types';
 
 export type { Scenario, ScenarioDiff } from './types';
@@ -46,6 +46,20 @@ function changedFields(before: ProcessStep, after: ProcessStep): ScenarioDiff['m
     : [{ stepId: before.id, field, before: before[field], after: after[field] }]);
 }
 
+function changedEdgeFields(
+  before: ProcessConnection,
+  after: ProcessConnection,
+): ScenarioDiff['edgesModified'][number]['changedFields'] {
+  const fields: Array<'source' | 'target' | 'label' | 'condition' | 'probability'> = [
+    'source',
+    'target',
+    'label',
+    'condition',
+    'probability',
+  ];
+  return fields.filter((field) => JSON.stringify(before[field]) !== JSON.stringify(after[field]));
+}
+
 function conflictingPolicies(main: BusinessProcess, scenario: BusinessProcess): ScenarioDiff['policyConflicts'] {
   const mainSteps = new Map(main.nodes.map((step) => [step.id, step]));
   const branchSteps = new Map(scenario.nodes.map((step) => [step.id, step]));
@@ -78,6 +92,12 @@ export function diffScenario(id: string): ScenarioDiff | null {
     }),
     edgesAdded: scenario.process.edges.filter((edge) => !mainEdges.has(edge.id)),
     edgesRemoved: main.edges.filter((edge) => !scenarioEdges.has(edge.id)),
+    edgesModified: main.edges.flatMap((edge) => {
+      const scenarioEdge = scenarioEdges.get(edge.id);
+      if (!scenarioEdge) return [];
+      const fields = changedEdgeFields(edge, scenarioEdge);
+      return fields.length > 0 ? [{ edgeId: edge.id, before: edge, after: scenarioEdge, changedFields: fields }] : [];
+    }),
     policyConflicts: conflictingPolicies(main, scenario.process),
   };
 }

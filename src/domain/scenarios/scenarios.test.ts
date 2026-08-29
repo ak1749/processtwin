@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { createStep } from '../commands/create-step';
+import { connectSteps } from '../commands/connect-steps';
+import { compareProcessScenario } from '../commands/compare-scenarios';
+import { updateConnection } from '../commands/update-connection';
 import { updateStep } from '../commands/update-step';
 import { mergeProcessScenario } from '../commands/scenario-commands';
 import { simulateProcess } from '../simulation/simulate';
@@ -58,5 +61,36 @@ describe('scenarios', () => {
     const scenario = forkScenario('Capacity trial', 'Test a faster review');
     updateStep({ actor: 'human' }, { id: 'step-a', changes: { name: 'Main review' } });
     expect(scenarioStatus(getScenario(scenario?.id ?? '')!)).toBe('stale');
+  });
+
+  it('reports an edge-condition change as one edge modification', () => {
+    createStep({ actor: 'human' }, { id: 'step-b', type: 'action', name: 'Approve' });
+    connectSteps({ actor: 'human' }, {
+      id: 'approval-route',
+      source: 'step-a',
+      target: 'step-b',
+      condition: { variable: 'refundAmount', operator: 'lt', value: 500 },
+    });
+    const scenario = forkScenario('Threshold trial', 'Raise the automatic approval threshold');
+    updateConnection(
+      { actor: 'agent', scenarioId: scenario?.id },
+      { id: 'approval-route', changes: { condition: { variable: 'refundAmount', operator: 'lt', value: 2_000 } } },
+    );
+
+    const result = compareProcessScenario({ actor: 'agent' }, { scenarioId: scenario?.id });
+
+    expect(result.ok).toBe(true);
+    const diff = result.data?.diff;
+    expect(diff).toBeDefined();
+    if (!diff) return;
+    expect(diff.edgesModified).toHaveLength(1);
+    expect(diff.edgesModified[0]).toMatchObject({
+      edgeId: 'approval-route',
+      changedFields: ['condition'],
+      before: { condition: { variable: 'refundAmount', operator: 'lt', value: 500 } },
+      after: { condition: { variable: 'refundAmount', operator: 'lt', value: 2_000 } },
+    });
+    expect(diff.edgesAdded).toEqual([]);
+    expect(diff.edgesRemoved).toEqual([]);
   });
 });
