@@ -2,6 +2,8 @@ import { nanoid } from 'nanoid';
 
 import { useProcessStore } from '../../stores/process-store';
 import { useScenarioStore } from '../../stores/scenario-store';
+import { useSimulationStore } from '../../stores/simulation-store';
+import { simulateProcess } from '../simulation/simulate';
 import type { Actor, BusinessProcess, ProcessPolicy, ProcessStep } from '../../types/process';
 import type { Scenario, ScenarioDiff } from './types';
 
@@ -95,6 +97,8 @@ export function mergeScenario(id: string): { scenario: Scenario; stateVersion: n
   const scenario = getScenario(id);
   if (!scenario || scenarioStatus(scenario) !== 'open') return null;
   const processStore = useProcessStore.getState();
+  const simulationStore = useSimulationStore.getState();
+  const baseline = simulationStore.result;
   const merged = cloneProcess(processStore.process);
   merged.nodes = cloneProcess(scenario.process).nodes;
   merged.edges = cloneProcess(scenario.process).edges;
@@ -111,6 +115,10 @@ export function mergeScenario(id: string): { scenario: Scenario; stateVersion: n
   scenarioStore.setScenarioStatus(id, 'merged');
   scenarioStore.setPendingMergeScenarioId(null);
   scenarioStore.setActiveScenarioId(null);
+  if (baseline) {
+    simulationStore.setBaseline({ label: `Before merging ${scenario.title}`, result: baseline });
+    simulationStore.setResult(simulateProcess(merged, { iterations: baseline.iterations, seed: baseline.seed }));
+  }
   return { scenario, stateVersion };
 }
 
