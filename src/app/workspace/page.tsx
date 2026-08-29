@@ -1,10 +1,13 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Check, Copy, LayoutTemplate, Redo2, Sparkles, Undo2, X } from 'lucide-react';
+import { Check, Copy, LayoutTemplate, Network, Redo2, Sparkles, Undo2, X } from 'lucide-react';
 
 import { ActivityFeed } from '../../components/activity/activity-feed';
 import { SimulationPanel } from '../../components/simulation/simulation-panel';
+import { ValidationPanel } from '../../components/validation/validation-panel';
+import { AgentTelemetryPanel } from '../../components/webmcp-panel/agent-telemetry-panel';
+import { ArchitectureCard } from '../../components/architecture/architecture-card';
 import { ProcessCanvas, type Selection } from '../../components/canvas/process-canvas';
 import { StepPalette } from '../../components/canvas/step-palette';
 import { ProcessInspector } from '../../components/inspector/process-inspector';
@@ -56,6 +59,7 @@ export default function WorkspacePage() {
   const [activeTab, setActiveTab] = useState<(typeof drawerTabs)[number]>('Activity');
   const [pendingPolicyAction, setPendingPolicyAction] = useState<PendingPolicyAction | null>(null);
   const [copiedPrompt, setCopiedPrompt] = useState<string | null>(null);
+  const [showArchitecture, setShowArchitecture] = useState(false);
   const hasLoadedDemoTemplate = useRef(false);
 
   const activeScenario = scenarios.find((scenario) => scenario.id === activeScenarioId);
@@ -137,6 +141,7 @@ export default function WorkspacePage() {
           <button type="button" onClick={() => redoProcess({ actor: 'human' }, {})} disabled={future.length === 0} className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40" aria-label="Redo last edit"><Redo2 size={15} /> Redo</button>
           <button type="button" onClick={applyAutoLayout} disabled={visibleProcess.nodes.length === 0} className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40" aria-label="Lay out process from left to right"><LayoutTemplate size={15} /> Layout</button>
           <button type="button" onClick={() => setActiveScenarioId(null)} disabled={!activeScenario} className="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 disabled:text-slate-400" aria-label="Switch to main process">{activeScenario ? 'View main' : 'Main process'}</button>
+          <button type="button" onClick={() => setShowArchitecture(true)} className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" aria-label="Show architecture card"><Network size={15} /> Architecture</button>
           <button type="button" onClick={() => setActiveTab('Simulation')} className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700" aria-label="Open simulation drawer">Simulate</button>
         </div>
       </header>
@@ -155,10 +160,11 @@ export default function WorkspacePage() {
         <div className="flex h-11 items-center gap-1 border-b border-slate-100 px-4" role="tablist" aria-label="Workspace drawer tabs">
           {drawerTabs.map((tab) => <button key={tab} type="button" role="tab" aria-selected={activeTab === tab} onClick={() => setActiveTab(tab)} className={`rounded-md px-3 py-1.5 text-sm font-medium ${activeTab === tab ? 'bg-slate-100 text-slate-950' : 'text-slate-500 hover:text-slate-800'}`}>{tab}</button>)}
         </div>
-        <div className="h-[calc(100%-2.75rem)]">{activeTab === 'Activity' ? <ActivityFeed /> : activeTab === 'Simulation' ? <SimulationPanel /> : <p className="px-4 py-4 text-sm text-slate-500">{activeTab} is available in a later phase.</p>}</div>
+        <div className="h-[calc(100%-2.75rem)]">{activeTab === 'Activity' ? <ActivityFeed /> : activeTab === 'Simulation' ? <SimulationPanel /> : activeTab === 'Validation' ? <ValidationPanel process={visibleProcess} onSelectNode={(id) => setSelection({ kind: 'node', id })} /> : <AgentTelemetryPanel />}</div>
       </section>
 
       {pendingPolicyAction ? <div role="alert" className="fixed bottom-52 right-5 z-20 w-[360px] rounded-xl border border-amber-200 bg-white p-4 shadow-lg shadow-slate-300/40"><div className="flex items-start gap-3"><span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-100 text-sm font-semibold text-amber-800">!</span><div className="min-w-0 flex-1"><h2 className="text-sm font-semibold text-slate-900">Policy warning</h2><p className="mt-1 text-sm leading-5 text-slate-600">{pendingPolicyAction.warnings[0]?.message}</p></div><button type="button" onClick={() => setPendingPolicyAction(null)} className="text-slate-400 hover:text-slate-700" aria-label="Dismiss policy warning"><X size={16} /></button></div><div className="mt-4 flex justify-end gap-2"><button type="button" onClick={() => setPendingPolicyAction(null)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">Cancel</button><button type="button" onClick={() => { pendingPolicyAction.action(); setPendingPolicyAction(null); }} className="rounded-md bg-amber-600 px-3 py-2 text-sm font-medium text-white hover:bg-amber-700">Do it anyway</button></div></div> : null}
+      {showArchitecture ? <ArchitectureCard onDismiss={() => setShowArchitecture(false)} /> : null}
       <ScenarioDiffDrawer />
     </main>
   );

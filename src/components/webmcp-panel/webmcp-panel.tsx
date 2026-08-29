@@ -1,20 +1,14 @@
 'use client';
 
-import { Bot, CircleCheck, CircleX, Gauge } from 'lucide-react';
+import { Bot, CircleCheck, CircleX } from 'lucide-react';
 
 import { useTelemetryStore } from '../../stores/telemetry-store';
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  return `${(bytes / 1024).toFixed(1)} KB`;
-}
 
 export function WebMcpPanel() {
   const support = useTelemetryStore((state) => state.support);
   const registeredToolNames = useTelemetryStore((state) => state.registeredToolNames);
   const tools = useTelemetryStore((state) => state.tools);
   const totalCalls = useTelemetryStore((state) => state.totalCalls);
-  const payloadBytes = useTelemetryStore((state) => state.payloadBytes);
   const estimatedInteractionsAvoided = useTelemetryStore((state) => state.estimatedInteractionsAvoided);
   const supported = support === 'supported';
 
@@ -41,14 +35,9 @@ export function WebMcpPanel() {
         </ul>
       </section>
 
-      <section className="mt-5 rounded-lg border border-slate-200 bg-slate-50 p-3" aria-labelledby="telemetry-title">
-        <div className="flex items-center gap-2"><Gauge size={15} className="text-slate-500" /><h3 id="telemetry-title" className="text-sm font-semibold text-slate-800">WebMCP session</h3></div>
-        <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
-          <div><dt className="text-slate-500">Tool calls</dt><dd className="mt-0.5 font-semibold text-slate-800">{totalCalls}</dd></div>
-          <div><dt className="text-slate-500">Payload returned</dt><dd className="mt-0.5 font-semibold text-slate-800">{formatBytes(payloadBytes)}</dd></div>
-          <div><dt className="text-slate-500">≈ tokens</dt><dd className="mt-0.5 font-semibold text-slate-800">{Math.round(payloadBytes / 4).toLocaleString()}</dd></div>
-          <div><dt className="text-slate-500">UI interactions avoided</dt><dd className="mt-0.5 font-semibold text-slate-800">≈ {estimatedInteractionsAvoided} <span className="font-normal text-slate-500">estimated</span></dd></div>
-        </dl>
+      <section className="mt-5 rounded-lg border border-slate-200 bg-slate-50 p-3" aria-label="Condensed agent session summary">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Agent session</p>
+        <dl className="mt-2 grid grid-cols-2 gap-3 text-xs"><div><dt className="text-slate-500">Tool calls</dt><dd className="mt-0.5 font-semibold text-slate-800">{totalCalls}</dd></div><div><dt className="text-slate-500">Interactions avoided</dt><dd className="mt-0.5 font-semibold text-slate-800">≈ {estimatedInteractionsAvoided}</dd></div></dl>
       </section>
 
       <div className="mt-5 flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500"><Bot size={14} /> Human and agent mutations share the command layer.</div>
