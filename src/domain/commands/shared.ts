@@ -57,11 +57,12 @@ export function executeCommand<TInput, TData>(
   // 1. Zod parse.
   const parsed = definition.schema.safeParse(rawInput);
   if (!parsed.success) {
+    const issue = parsed.error.issues[0];
     return failure<TData>(
       {
         code: 'INVALID_INPUT',
         message: 'The command input is invalid.',
-        details: parsed.error.issues,
+        details: { issues: parsed.error.issues, fieldPath: issue?.path ?? [] },
       },
       store.stateVersion,
     );

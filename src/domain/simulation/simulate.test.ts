@@ -53,9 +53,11 @@ describe('simulation', () => {
     const stateC = createRefundTemplate();
     const stateBManager = stateB.nodes.find((node) => node.id === 'manager-approval');
     const stateCManager = stateC.nodes.find((node) => node.id === 'manager-approval');
-    if (!stateBManager || !stateCManager) throw new Error('Refund template is incomplete.');
+    const stateCManagerRoute = stateC.edges.find((edge) => edge.id === 'e-amount-manager-low');
+    if (!stateBManager || !stateCManager || !stateCManagerRoute?.condition) throw new Error('Refund template is incomplete.');
     stateBManager.duration = { minMinutes: 240, typicalMinutes: 360, maxMinutes: 480 };
     stateCManager.capacityPerHour = 10;
+    stateCManagerRoute.condition.value = 700;
     const select = (process: ReturnType<typeof createRefundTemplate>) => {
       const result = simulateProcess(process, { iterations: 10_000, seed: 42 });
       return { p50Minutes: result.p50Minutes, p95Minutes: result.p95Minutes, manager: result.stepMetrics.find((metric) => metric.stepId === 'manager-approval') };

@@ -50,10 +50,10 @@ This is the specification's true north. **If a feature does not appear in this s
 |---|---|---|
 | 0:00–0:15 | Empty canvas. Right rail shows **11 tools registered**. Voiceover: "No chatbot here. Everything the agent does, it does through tools this page publishes." | — |
 | 0:15–0:50 | Prompt 1 (build). Nine nodes and eleven edges fade in, agent-authored nodes tinted. Efficiency badge: **1 tool call · ~28 UI interactions avoided**. | `get_process_summary`, `batch_mutate_process`, `auto_layout` |
-| 0:50–1:10 | Human drags a node, opens inspector, changes Manager Approval 60 → 360 min. Then asks the agent "what did I change?" Agent answers correctly. | `get_changes_since` |
+| 0:50–1:10 | Human drags a node, opens inspector, changes Manager Approval from 25/60/150 to 240/360/480 min. Then asks the agent "what did I change?" Agent answers correctly. | `get_changes_since` |
 | 1:10–1:45 | Prompt 2 (analyse). Simulation panel fills. Tool count ticks **11 → 12** as `analyze_bottlenecks` registers itself. Manager Approval flagged. | `validate_process`, `simulate_process`, `analyze_bottlenecks` |
 | 1:45–2:25 | Prompt 3 (optimise). Agent forks a scenario. **It tries to delete Manager Approval and is rejected by a policy lock the human set earlier.** It adapts, then requests a merge. Diff drawer opens. Human clicks Apply. | `fork_scenario`, `batch_mutate_process(scenarioId)` → `POLICY_VIOLATION`, retry, `compare_scenarios`, `request_merge` |
-| 2:25–2:50 | Re-simulate. Before/after table. P95 collapses. | `simulate_process` |
+| 2:25–2:50 | Re-simulate State B versus State C. Before/after table shows P95 collapsing from the human-edited baseline to the optimised scenario. | `simulate_process` |
 | 2:50–3:00 | Architecture card: one command layer, two interfaces, N tools, 0 lines of DOM automation. | — |
 
 **The single best ten seconds in this video is the policy-lock rejection.** An app that *governs* its agent is something almost no other submission will have, and it speaks directly to what the challenge sponsors have said they care about — an agent knowing what is safe to do and when to check back with a human. Do not cut it.

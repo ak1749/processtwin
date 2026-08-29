@@ -12,10 +12,14 @@ const durationSchema = z.object({
   minMinutes: z.number().finite().nonnegative(),
   typicalMinutes: z.number().finite().nonnegative(),
   maxMinutes: z.number().finite().nonnegative(),
-}).refine(
-  (duration) => duration.minMinutes <= duration.typicalMinutes && duration.typicalMinutes <= duration.maxMinutes,
-  'Duration must satisfy minMinutes ≤ typicalMinutes ≤ maxMinutes.',
-);
+}).superRefine((duration, context) => {
+  if (duration.minMinutes > duration.typicalMinutes) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ['typicalMinutes'], message: 'Typical duration must be at least the minimum duration.' });
+  }
+  if (duration.typicalMinutes > duration.maxMinutes) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ['typicalMinutes'], message: 'Typical duration must not exceed the maximum duration.' });
+  }
+});
 const positionSchema = z.object({ x: z.number().finite(), y: z.number().finite() });
 const conditionSchema = z.object({
   variable: z.string().trim().min(1),

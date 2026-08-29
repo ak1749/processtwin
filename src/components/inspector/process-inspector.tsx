@@ -51,9 +51,11 @@ function NodeInspector({
 }) {
   const showsWorkFields = step.type === 'action' || step.type === 'approval';
   const showsDescription = step.type !== 'start' && step.type !== 'end';
+  const [typicalDurationError, setTypicalDurationError] = useState<string | null>(null);
 
   function save(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setTypicalDurationError(null);
     const values = new FormData(event.currentTarget);
     const text = (name: string) => String(values.get(name) ?? '').trim();
     const numberOrNull = (name: string) => {
@@ -79,7 +81,16 @@ function NodeInspector({
 
     runHumanAction(
       () => {
-        updateStep({ actor: 'human', scenarioId }, { id: step.id, changes });
+        const result = updateStep({ actor: 'human', scenarioId }, { id: step.id, changes });
+        if (!result.ok && result.error?.code === 'INVALID_INPUT') {
+          const details = result.error.details;
+          const fieldPath = details && typeof details === 'object' && 'fieldPath' in details
+            ? (details as { fieldPath?: unknown }).fieldPath
+            : undefined;
+          if (Array.isArray(fieldPath) && fieldPath.join('.') === 'changes.duration.typicalMinutes') {
+            setTypicalDurationError('Typical duration must not exceed the maximum duration.');
+          }
+        }
       },
       { kind: 'update_step', stepId: step.id, changes },
     );
@@ -101,7 +112,7 @@ function NodeInspector({
           <Field label="Owner"><input name="owner" defaultValue={step.owner} className={fieldClass} placeholder="Team or role" /></Field>
           <div className="grid grid-cols-3 gap-2">
             <Field label="Min (min)"><input name="minMinutes" type="number" min="0" defaultValue={step.duration.minMinutes} className={fieldClass} required /></Field>
-            <Field label="Typical (min)"><input name="typicalMinutes" type="number" min="0" defaultValue={step.duration.typicalMinutes} className={fieldClass} required /></Field>
+            <div><Field label="Typical (min)"><input name="typicalMinutes" type="number" min="0" defaultValue={step.duration.typicalMinutes} className={`${fieldClass} ${typicalDurationError ? 'border-rose-500 focus:border-rose-500' : ''}`} aria-invalid={Boolean(typicalDurationError)} aria-describedby={typicalDurationError ? 'typical-duration-error' : undefined} required /></Field>{typicalDurationError ? <p id="typical-duration-error" role="alert" className="mt-1 text-xs leading-4 text-rose-700">{typicalDurationError}</p> : null}</div>
             <Field label="Max (min)"><input name="maxMinutes" type="number" min="0" defaultValue={step.duration.maxMinutes} className={fieldClass} required /></Field>
           </div>
           <div className="grid grid-cols-2 gap-2">
