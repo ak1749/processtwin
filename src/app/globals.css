@@ -2,20 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-  font-family: 'Geist';
-  src: url('/fonts/GeistVF.woff') format('woff');
-  font-display: swap;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Geist Mono';
-  src: url('/fonts/GeistMonoVF.woff') format('woff');
-  font-display: swap;
-  font-style: normal;
-}
-
 html,
 body {
   min-height: 100%;
@@ -25,7 +11,7 @@ body {
   margin: 0;
   background: #f6f8fb;
   color: #172033;
-  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   text-rendering: optimizeLegibility;
 }
@@ -33,7 +19,7 @@ body {
 code,
 kbd,
 .font-mono {
-  font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 button,
