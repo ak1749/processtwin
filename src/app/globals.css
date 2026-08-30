@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Geist';
+  src: url('/fonts/GeistVF.woff') format('woff');
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Geist Mono';
+  src: url('/fonts/GeistMonoVF.woff') format('woff');
+  font-display: swap;
+  font-style: normal;
+}
+
 html,
 body {
   min-height: 100%;
@@ -9,8 +23,17 @@ body {
 
 body {
   margin: 0;
-  background: #f8fafc;
-  color: #0f172a;
+  background: #f6f8fb;
+  color: #172033;
+  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  text-rendering: optimizeLegibility;
+}
+
+code,
+kbd,
+.font-mono {
+  font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 button,
@@ -23,6 +46,28 @@ select {
 :focus-visible {
   outline: 2px solid #2563eb;
   outline-offset: 2px;
+}
+
+@layer components {
+  .pt-panel {
+    @apply border border-slate-200/80 bg-white shadow-[0_1px_2px_rgb(15_23_42/0.03)];
+  }
+
+  .pt-control {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-[0_1px_2px_rgb(15_23_42/0.12)] transition duration-200 hover:bg-slate-800 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
+  .pt-subtle-control {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-[0_1px_1px_rgb(15_23_42/0.02)] transition duration-200 hover:border-slate-300 hover:bg-slate-50 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
+  .pt-section-label {
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500;
+  }
+
+  .pt-input {
+    @apply w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm text-slate-900 shadow-[inset_0_1px_1px_rgb(15_23_42/0.02)] outline-none placeholder:text-slate-400 transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200;
+  }
 }
 
 @keyframes process-agent-node-enter {

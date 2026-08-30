@@ -26,7 +26,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-const fieldClass = 'w-full rounded-md border border-slate-200 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500';
+const fieldClass = 'pt-input';
 const operators: Array<{ value: Operator; label: string }> = [
   { value: 'eq', label: 'equals' },
   { value: 'neq', label: 'does not equal' },
@@ -101,7 +101,7 @@ function NodeInspector({
       <div className="flex items-center gap-2 border-b border-slate-100 pb-4">
         <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600"><SlidersHorizontal size={16} /></span>
         <div>
-          <p className="text-sm font-semibold text-slate-900">{step.type[0].toUpperCase() + step.type.slice(1)} step</p>
+          <p className="text-sm font-semibold tracking-[-0.02em] text-slate-900">{step.type[0].toUpperCase() + step.type.slice(1)} step</p>
           <p className="text-xs text-slate-500">Edit process details</p>
         </div>
       </div>
@@ -121,9 +121,9 @@ function NodeInspector({
           </div>
         </>
       ) : (
-        <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-500">This step is instantaneous. Duration, cost, and capacity do not apply.</p>
+        <p className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-500">This step is instantaneous. Duration, cost, and capacity do not apply.</p>
       )}
-      <button type="submit" className="w-full rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700 active:translate-y-px">Save changes</button>
+      <button type="submit" className="pt-control w-full">Save changes</button>
       <PolicyChips step={step} policies={policies} variables={variables} scenarioId={scenarioId} />
     </form>
   );
@@ -173,24 +173,24 @@ function EdgeInspector({
       <div className="flex items-center gap-2 border-b border-slate-100 pb-4">
         <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600"><Link2 size={16} /></span>
         <div>
-          <p className="text-sm font-semibold text-slate-900">Connection</p>
+          <p className="text-sm font-semibold tracking-[-0.02em] text-slate-900">Connection</p>
           <p className="text-xs text-slate-500">Route between two steps</p>
         </div>
       </div>
       <Field label="Label"><input name="label" defaultValue={edge.label} className={fieldClass} placeholder="Optional branch label" /></Field>
-      <label className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700">
+      <label className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-sm text-slate-700">
         Add condition
         <input type="checkbox" checked={hasCondition} onChange={(event) => setHasCondition(event.target.checked)} className="h-4 w-4 accent-slate-900" />
       </label>
       {hasCondition ? (
-        <div className="space-y-2 rounded-lg bg-slate-50 p-3">
+        <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50 p-3">
           <Field label="Variable"><input name="variable" defaultValue={edge.condition?.variable} className={fieldClass} placeholder="amount" required /></Field>
           <Field label="Operator"><select name="operator" defaultValue={edge.condition?.operator ?? 'eq'} className={fieldClass}>{operators.map((operator) => <option key={operator.value} value={operator.value}>{operator.label}</option>)}</select></Field>
           <Field label="Value"><input name="conditionValue" defaultValue={String(edge.condition?.value ?? '')} className={fieldClass} placeholder="500" required /></Field>
         </div>
       ) : null}
       <Field label="Probability"><input name="probability" type="number" min="0" max="1" step="0.01" defaultValue={edge.probability} className={fieldClass} placeholder="Optional fallback probability" /></Field>
-      <button type="submit" className="w-full rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700 active:translate-y-px">Save connection</button>
+      <button type="submit" className="pt-control w-full">Save connection</button>
     </form>
   );
 }
@@ -205,8 +205,8 @@ export function ProcessInspector({ process, selection, runHumanAction, scenarioI
       {selectedEdge ? <EdgeInspector key={selectedEdge.id} edge={selectedEdge} scenarioId={scenarioId} runHumanAction={runHumanAction} /> : null}
       {!selectedStep && !selectedEdge ? (
         <div className="pt-8 text-center">
-          <span className="mx-auto inline-flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500"><SlidersHorizontal size={19} /></span>
-          <h2 className="mt-3 text-sm font-semibold text-slate-800">Nothing selected</h2>
+          <span className="mx-auto inline-flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600"><SlidersHorizontal size={19} /></span>
+          <h2 className="mt-3 text-sm font-semibold tracking-[-0.02em] text-slate-800">Nothing selected</h2>
           <p className="mt-1 text-xs leading-5 text-slate-500">Select a step or connection to edit its details.</p>
         </div>
       ) : null}

@@ -40,8 +40,8 @@ function StepNode({ data, selected }: NodeProps<ProcessFlowNode>) {
 
   return (
     <div
-      className={`relative w-[216px] rounded-xl border bg-white px-3 py-3 shadow-sm ${
-        selected ? 'border-slate-900 ring-2 ring-slate-300' : 'border-slate-200'
+      className={`relative w-[224px] rounded-xl border bg-white px-3.5 py-3 shadow-[0_2px_5px_rgb(15_23_42/0.07)] transition-shadow ${
+        selected ? 'border-slate-900 ring-2 ring-slate-300 shadow-[0_5px_14px_rgb(15_23_42/0.12)]' : 'border-slate-200 hover:shadow-[0_4px_12px_rgb(15_23_42/0.10)]'
       } ${agentCreated ? 'pt-node-agent-created bg-sky-50/70 ring-1 ring-sky-200' : ''} ${data.agentEdited ? 'pt-node-agent-edited' : ''}`}
     >
       <Handle type="target" position={Position.Left} className="!h-2.5 !w-2.5 !border-2 !border-white !bg-slate-500" />
@@ -56,13 +56,13 @@ function StepNode({ data, selected }: NodeProps<ProcessFlowNode>) {
         </span>
       ) : null}
       {constrained ? <span className="absolute -left-2 -top-2 inline-flex h-5 w-5 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-700" title={data.policyLabels.join(', ')} aria-label={`Constrained by ${data.policyLabels.join(', ')}`}><LockKeyhole size={11} /></span> : null}
-      <div className="flex items-start gap-2">
+      <div className="flex items-start gap-2.5">
         <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border ${appearance.accent}`}>
           <Icon size={15} strokeWidth={2} />
         </span>
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-slate-900">{step.name}</p>
-          <p className="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-slate-500">{appearance.label}</p>
+          <p className="truncate text-sm font-semibold tracking-[-0.015em] text-slate-900">{step.name}</p>
+          <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">{appearance.label}</p>
         </div>
       </div>
       <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-2 text-xs text-slate-500">

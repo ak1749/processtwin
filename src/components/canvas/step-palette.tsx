@@ -20,6 +20,14 @@ const paletteItems: Array<{ type: StepType; label: string; icon: typeof Play; de
   { type: 'end', label: 'End', icon: Flag, description: 'Exit point' },
 ];
 
+const paletteTone: Record<StepType, string> = {
+  start: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
+  action: 'bg-blue-50 text-blue-700 ring-blue-100',
+  decision: 'bg-amber-50 text-amber-700 ring-amber-100',
+  approval: 'bg-violet-50 text-violet-700 ring-violet-100',
+  end: 'bg-slate-900 text-white ring-slate-900',
+};
+
 function initialStep(type: StepType, index: number): Omit<ProcessStep, 'id' | 'createdBy' | 'updatedAt'> {
   const nameByType: Record<StepType, string> = {
     start: 'Start',
@@ -59,10 +67,11 @@ export function StepPalette({ nodeCount, scenarioId, runHumanAction }: StepPalet
   return (
     <aside className="flex min-h-0 flex-col bg-white p-4" aria-label="Step palette">
       <div>
-        <h2 className="text-sm font-semibold text-slate-900">Add a step</h2>
-        <p className="mt-1 text-xs leading-5 text-slate-500">Place nodes, then connect their handles on the canvas.</p>
+        <p className="pt-section-label">Process canvas</p>
+        <h2 className="mt-1 text-sm font-semibold tracking-[-0.02em] text-slate-900">Add a step</h2>
+        <p className="mt-1 text-xs leading-5 text-slate-500">Add nodes, then connect their handles on the canvas.</p>
       </div>
-      <div className="mt-5 space-y-2">
+      <div className="mt-5 space-y-1.5">
         {paletteItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -70,16 +79,16 @@ export function StepPalette({ nodeCount, scenarioId, runHumanAction }: StepPalet
               key={item.type}
               type="button"
               onClick={() => addStep(item.type)}
-              className="flex w-full items-center gap-3 rounded-lg border border-slate-200 px-3 py-2.5 text-left hover:border-slate-300 hover:bg-slate-50 active:translate-y-px"
+              className="flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-left transition duration-200 hover:border-slate-200 hover:bg-slate-50 active:translate-y-px"
             >
-              <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-slate-100 text-slate-700">
+              <span className={`inline-flex h-8 w-8 items-center justify-center rounded-lg ring-1 ${paletteTone[item.type]}`}>
                 <Icon size={15} />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-medium text-slate-800">{item.label}</span>
                 <span className="block text-xs text-slate-500">{item.description}</span>
               </span>
-              <Plus size={14} className="text-slate-400" aria-hidden="true" />
+              <Plus size={15} className="text-slate-400" aria-hidden="true" />
             </button>
           );
         })}

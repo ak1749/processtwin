@@ -179,13 +179,14 @@ export function ProcessCanvas({ process, scenarioId, onSelectionChange, runHuman
         onEdgeClick={(_, edge) => onSelectionChange({ kind: 'edge', id: edge.id })}
         onPaneClick={() => onSelectionChange(null)}
         fitView
+        fitViewOptions={{ padding: 0.06, maxZoom: 1 }}
         deleteKeyCode="Delete"
         minZoom={0.2}
         defaultEdgeOptions={{ type: 'smoothstep' }}
         className="bg-slate-50"
       >
-        <Background gap={20} size={1} color="#cbd5e1" />
-        <Controls showInteractive={false} className="!border-slate-200 !shadow-sm" />
+        <Background gap={20} size={1} color="#d8e0ea" />
+        <Controls showInteractive={false} className="!overflow-hidden !rounded-lg !border-slate-200 !shadow-[0_3px_10px_rgb(15_23_42/0.10)]" />
       </ReactFlow>
     </div>
   );
