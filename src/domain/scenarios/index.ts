@@ -64,11 +64,14 @@ function conflictingPolicies(main: BusinessProcess, scenario: BusinessProcess): 
   const mainSteps = new Map(main.nodes.map((step) => [step.id, step]));
   const branchSteps = new Map(scenario.nodes.map((step) => [step.id, step]));
   const conflicts: ProcessPolicy[] = main.policies.filter((policy) => {
-    if (policy.rule.kind === 'no_delete') return !branchSteps.has(policy.rule.stepId);
+    if (policy.rule.kind === 'no_delete') {
+      return mainSteps.has(policy.rule.stepId) && !branchSteps.has(policy.rule.stepId);
+    }
     if (policy.rule.kind === 'lock_step') {
       const before = mainSteps.get(policy.rule.stepId);
       const after = branchSteps.get(policy.rule.stepId);
-      return !before || !after || policy.rule.lockedFields.some((field) => JSON.stringify(before[field]) !== JSON.stringify(after[field]));
+      if (!before) return false;
+      return !after || policy.rule.lockedFields.some((field) => JSON.stringify(before[field]) !== JSON.stringify(after[field]));
     }
     return false;
   });

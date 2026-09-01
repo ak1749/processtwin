@@ -16,6 +16,7 @@ export function clearProcess(
       process.nodes = [];
       process.edges = [];
       process.variables = [];
+      process.policies = [];
     },
     change: (before) => ({
       kind: 'clear_process',
@@ -23,12 +24,14 @@ export function clearProcess(
         ...before.nodes.map((node) => node.id),
         ...before.edges.map((edge) => edge.id),
         ...before.variables.map((variable) => variable.key),
+        ...before.policies.map((policy) => policy.id),
       ],
       summary: 'Cleared the process workspace.',
       before: {
         nodes: before.nodes,
         edges: before.edges,
         variables: before.variables,
+        policies: before.policies,
       },
       data: {
         clearedNodeCount: before.nodes.length,

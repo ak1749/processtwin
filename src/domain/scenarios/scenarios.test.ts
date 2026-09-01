@@ -10,7 +10,7 @@ import { simulateProcess } from '../simulation/simulate';
 import { createEmptyProcess, useProcessStore } from '../../stores/process-store';
 import { useScenarioStore } from '../../stores/scenario-store';
 import { useSimulationStore } from '../../stores/simulation-store';
-import { forkScenario, getScenario, scenarioStatus } from './index';
+import { diffScenario, forkScenario, getScenario, scenarioStatus } from './index';
 
 beforeEach(() => {
   useProcessStore.setState({ process: createEmptyProcess(), stateVersion: 1, past: [], future: [], deltaLog: [] });
@@ -92,5 +92,25 @@ describe('scenarios', () => {
     });
     expect(diff.edgesAdded).toEqual([]);
     expect(diff.edgesRemoved).toEqual([]);
+  });
+
+  it('ignores legacy policies whose referenced step no longer exists', () => {
+    const scenario = forkScenario('Capacity trial', 'Test a faster review');
+    const state = useProcessStore.getState();
+    useProcessStore.setState({
+      process: {
+        ...state.process,
+        policies: [{
+          id: 'orphaned-lock',
+          label: 'Orphaned lock',
+          createdBy: 'human',
+          rule: { kind: 'lock_step', stepId: 'deleted-step', lockedFields: ['duration'] },
+        }],
+      },
+    });
+
+    const diff = diffScenario(scenario?.id ?? '');
+
+    expect(diff?.policyConflicts).toEqual([]);
   });
 });

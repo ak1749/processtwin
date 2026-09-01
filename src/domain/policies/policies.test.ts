@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { batchMutateProcess } from '../commands/batch-mutate-process';
+import { clearProcess } from '../commands/clear-process';
 import { deleteStep } from '../commands/delete-step';
 import { useActivityStore } from '../../stores/activity-store';
 import { createEmptyProcess, useProcessStore } from '../../stores/process-store';
@@ -130,5 +131,19 @@ describe('process policy enforcement', () => {
     expect(result.ok).toBe(true);
     expect(result.warnings?.[0]).toMatchObject({ label: 'Manager Approval is locked' });
     expect(useProcessStore.getState().process.nodes.some((node) => node.id === 'manager')).toBe(false);
+  });
+
+  it('clears policy constraints with a cleared workspace', () => {
+    setProcess(approvalPathProcess([lockedManagerPolicy()]));
+
+    const result = clearProcess({ actor: 'human' }, {});
+
+    expect(result.ok).toBe(true);
+    expect(useProcessStore.getState().process).toMatchObject({
+      nodes: [],
+      edges: [],
+      variables: [],
+      policies: [],
+    });
   });
 });
