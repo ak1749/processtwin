@@ -58,7 +58,7 @@ This is the specification's true north. **If a feature does not appear in this s
 
 **The single best ten seconds in this video is the policy-lock rejection.** An app that *governs* its agent is something almost no other submission will have, and it speaks directly to what the challenge sponsors have said they care about — an agent knowing what is safe to do and when to check back with a human. Do not cut it.
 
-Tool registration is state-dependent: 13 core tools are available at cold start, `fork_scenario` brings the count to 14 once a process has a node, and a successful simulation brings it to 15 by registering `analyze_bottlenecks`.
+Tool registration is state-dependent: 13 core tools are available at cold start, `fork_scenario` brings the count to 14 once a process has a node, and a successful simulation brings it to 15 by registering `analyze_bottlenecks`. An open scenario adds `compare_scenarios`, `request_merge`, and `discard_scenario` (18 total); a pending merge adds `get_merge_status` (19 total).
 
 ---
 
@@ -328,7 +328,7 @@ Maintain the registered set as a function of app state, and re-reconcile wheneve
 
 | Tool | Registered when |
 |---|---|
-| core 11 | always |
+| 13 core tools | always |
 | `analyze_bottlenecks` | at least one simulation result exists |
 | `fork_scenario` | process has ≥ 1 node |
 | `compare_scenarios`, `request_merge`, `discard_scenario` | an open scenario exists |
@@ -336,7 +336,7 @@ Maintain the registered set as a function of app state, and re-reconcile wheneve
 
 Reconciliation: diff desired names against registered names, `unregisterTool` the departures, `registerTool` the arrivals. Never re-register an unchanged tool — some implementations will throw on duplicate names.
 
-The right rail shows the live list, so the count visibly ticks 11 → 12 → 15 during the demo. Most submissions will register a static array in a `useEffect` and never call `unregisterTool` at all. This one line of differentiation is cheap and reads as genuine engineering.
+The right rail shows the live list, so the count visibly ticks 13 → 14 → 15 during the demo, then 18 for an open scenario and 19 for a pending merge. Most submissions will register a static array in a `useEffect` and never call `unregisterTool` at all. This one line of differentiation is cheap and reads as genuine engineering.
 
 ### Result envelope — every tool returns this shape
 
@@ -362,7 +362,7 @@ interface ToolEnvelope<T> {
 
 ## 11. Tool catalogue
 
-15 tools; 11 active at cold start. Descriptions must teach the agent how the product works — the difference between "Creates a node" and a real description is worth real points, and it is what makes the agent behave well unprompted.
+19 tools are defined; 13 are active at cold start, with up to 19 registered as process and scenario state make them relevant. Descriptions must teach the agent how the product works — the difference between "Creates a node" and a real description is worth real points, and it is what makes the agent behave well unprompted.
 
 **11.1 `get_process_summary`** — `readOnlyHint`. Input `{}`. Returns name, counts, start/end ids, a one-line summary per step (`id, type, name, owner, typicalMinutes, capacityPerHour`), active policy labels, validation status, latest simulation headline, `stateVersion`.
 > *"Returns a compact overview of the process currently open in ProcessTwin — every step with its id, type, timing and owner, plus active policy constraints and the latest simulation headline. Call this first. It is much cheaper than get_process_graph and is sufficient for most reasoning."*
@@ -524,7 +524,7 @@ Ships as its own file in the project root. Codex loads it automatically on every
 >
 > And you can lock the agent out of things. Set a policy — "refunds above $2,000 always require human approval" — and every agent mutation that would violate it is rejected at the command layer with a structured error explaining why. The agent reads the reason and adapts. That is what an agent-native app should feel like: not an agent that can do anything, but an app that knows what it will let an agent do.
 >
-> 15 WebMCP tools, registered and unregistered dynamically as application state changes. Zero lines of DOM automation.
+> 19 WebMCP tools, registered and unregistered dynamically as application state changes. Zero lines of DOM automation.
 
 ---
 

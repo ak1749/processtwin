@@ -20,6 +20,8 @@ WebMCP tool call ──┘
 
 ## WebMCP tool catalogue
 
+ProcessTwin has **13 core tools**. Context adds `fork_scenario` when the process has a step, `analyze_bottlenecks` after a successful simulation, three review tools for an open scenario, and `get_merge_status` for a pending merge — **up to 19 tools** in total.
+
 | Tool | Purpose | Conditionally registered? |
 | --- | --- | --- |
 | `get_process_summary` | Compact overview of the open process, its steps, policies, validation, and simulation headline. | No |
