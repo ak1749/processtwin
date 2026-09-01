@@ -9,7 +9,7 @@ import { getScenario, scenarioStatus } from '../scenarios';
 import { useScenarioStore } from '../../stores/scenario-store';
 import type { BusinessProcess, ProcessConnection, ProcessStep } from '../../types/process';
 import { conditionSchema, durationSchema, positionSchema, stepTypeSchema, variableSchema } from './schemas';
-import { edgeNotFoundError, stepNotFoundError } from './shared';
+import { appendPolicyViolationActivity, edgeNotFoundError, stepNotFoundError } from './shared';
 import type { CommandContext, CommandError, CommandResult } from './types';
 
 const zeroDuration = { minMinutes: 0, typicalMinutes: 0, maxMinutes: 0 };
@@ -351,6 +351,7 @@ export function batchMutateProcess(ctx: CommandContext, rawInput: unknown): Comm
     const violations = checkPolicies(projected, policy);
     if (ctx.actor === 'agent' && violations.length > 0) {
       const violation = violations[0];
+      appendPolicyViolationActivity(violation);
       return batchFailure(index, {
         code: 'POLICY_VIOLATION',
         message: violation.message,

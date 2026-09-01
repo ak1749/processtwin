@@ -44,7 +44,7 @@ function ActivityRow({ event, canUndo }: { event: ActivityEvent; canUndo: boolea
       <button
         type="button"
         onClick={() => undoProcess({ actor: 'human' }, {})}
-        disabled={!canUndo}
+        disabled={!canUndo || !event.undoToken}
         className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
         aria-label={`Undo ${event.title}`}
       >

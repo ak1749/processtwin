@@ -43,6 +43,20 @@ function failure<TData>(
   return { ok: false, stateVersion, error };
 }
 
+export function appendPolicyViolationActivity(violation: {
+  policyId: string;
+  label: string;
+  message: string;
+  suggestion: string;
+}): void {
+  useActivityStore.getState().append({
+    actor: 'agent',
+    action: 'policy_violation',
+    title: `Agent action blocked by policy · ${violation.label}`,
+    description: `${violation.message} ${violation.suggestion}`,
+  });
+}
+
 export function validStepDetails(process: BusinessProcess): Array<{ id: string; name: string }> {
   return process.nodes.map((step) => ({ id: step.id, name: step.name }));
 }
@@ -100,6 +114,7 @@ export function executeCommand<TInput, TData>(
   );
   if (ctx.actor === 'agent' && warnings.length > 0) {
     const violation = warnings[0];
+    appendPolicyViolationActivity(violation);
     return failure<TData>(
       {
         code: 'POLICY_VIOLATION',

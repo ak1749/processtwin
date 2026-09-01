@@ -72,6 +72,13 @@ describe('process policy enforcement', () => {
     expect(result.error).toMatchObject({ code: 'POLICY_VIOLATION', suggestion: expect.any(String) });
     expect(result.error?.details).toMatchObject({ label: 'Manager Approval is locked' });
     expect(useProcessStore.getState().process.nodes.some((node) => node.id === 'manager')).toBe(true);
+    const [activity] = useActivityStore.getState().events;
+    expect(activity).toMatchObject({
+      actor: 'agent',
+      action: 'policy_violation',
+      title: 'Agent action blocked by policy · Manager Approval is locked',
+    });
+    expect(activity?.undoToken).toBeUndefined();
   });
 
   it('rejects an entire agent batch when one operation deletes a locked step', () => {
@@ -89,6 +96,13 @@ describe('process policy enforcement', () => {
     expect(result.error?.details).toMatchObject({ label: 'Manager Approval is locked' });
     expect(useProcessStore.getState().process.nodes.find((node) => node.id === 'auto')?.name).toBe('Auto approve');
     expect(useProcessStore.getState().process.nodes.some((node) => node.id === 'manager')).toBe(true);
+    const [activity] = useActivityStore.getState().events;
+    expect(activity).toMatchObject({
+      actor: 'agent',
+      action: 'policy_violation',
+      title: 'Agent action blocked by policy · Manager Approval is locked',
+    });
+    expect(activity?.undoToken).toBeUndefined();
   });
 
   it('blocks removal of an approval branch required on high-value paths', () => {
