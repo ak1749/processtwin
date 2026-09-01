@@ -59,6 +59,7 @@ export default function WorkspacePage() {
   const [activeTab, setActiveTab] = useState<(typeof drawerTabs)[number]>('Activity');
   const [pendingPolicyAction, setPendingPolicyAction] = useState<PendingPolicyAction | null>(null);
   const [copiedPrompt, setCopiedPrompt] = useState<string | null>(null);
+  const [isPaletteCollapsed, setIsPaletteCollapsed] = useState(false);
   const [showArchitecture, setShowArchitecture] = useState(false);
   const hasLoadedDemoTemplate = useRef(false);
 
@@ -146,8 +147,8 @@ export default function WorkspacePage() {
         </div>
       </header>
 
-      <div className="grid min-h-0 grid-cols-[13rem_minmax(0,1fr)_20rem] gap-px bg-slate-200">
-        <StepPalette nodeCount={visibleProcess.nodes.length} scenarioId={activeScenario?.id} runHumanAction={runHumanAction} />
+      <div className={`grid min-h-0 ${isPaletteCollapsed ? 'grid-cols-[4.5rem_minmax(0,1fr)_20rem]' : 'grid-cols-[13rem_minmax(0,1fr)_20rem]'} gap-px bg-slate-200 transition-[grid-template-columns] duration-200`}>
+        <StepPalette collapsed={isPaletteCollapsed} nodeCount={visibleProcess.nodes.length} onToggle={() => setIsPaletteCollapsed((value) => !value)} scenarioId={activeScenario?.id} runHumanAction={runHumanAction} />
         <section className={`relative min-h-0 min-w-0 bg-slate-50 ${activeScenario ? 'ring-2 ring-inset ring-violet-400' : ''}`} aria-label="Process canvas area">
           {activeScenario ? <div className="absolute left-3 right-3 top-3 z-10 flex items-center justify-between rounded-lg bg-violet-700 px-3 py-2 text-xs font-medium text-white shadow-sm">Scenario: {activeScenario.title} · viewing branch <button type="button" onClick={() => setActiveScenarioId(null)} className="rounded-md bg-white/15 px-2 py-1 transition hover:bg-white/25">View main</button></div> : null}
           <ProcessCanvas process={visibleProcess} scenarioId={activeScenario?.id} onSelectionChange={setSelection} runHumanAction={runHumanAction} />
