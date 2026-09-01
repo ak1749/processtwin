@@ -19,7 +19,7 @@ export function registerTool(tool: ToolDef, registry: ToolRegistry, signal: Abor
   if (!mc || registry.names.has(tool.name)) return false;
 
   try {
-    mc.registerTool({
+    document.modelContext.registerTool({
       name: tool.name,
       description: tool.description,
       inputSchema: tool.inputSchema,
