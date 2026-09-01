@@ -77,6 +77,10 @@ npm run verify
 
 `localhost` is a secure context for WebMCP. Open the workspace in ChatGPT's desktop in-app browser, or Chrome 149+ with `chrome://flags/#enable-webmcp-testing` enabled. The right rail reports whether WebMCP is detected and lists the tools the page successfully registered. If it is unavailable, ProcessTwin remains fully usable as a normal canvas editor.
 
+### Deployed verification
+
+On September 1, 2026, the deployed app at [processtwin-beta.vercel.app](https://processtwin-beta.vercel.app) was tested in Codex's in-app browser. The blank workspace registered all 13 core tools, and a live `get_process_summary` call returned an `ok: true` envelope for the current process. This is an end-to-end WebMCP invocation against the deployed application, not a unit-test substitute.
+
 ## Design decisions
 
 - Both interfaces use one command layer, so policy checks, undo history, activity entries, and process state cannot diverge.
