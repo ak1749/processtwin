@@ -59,12 +59,24 @@ export default function WorkspacePage() {
   const [activeTab, setActiveTab] = useState<(typeof drawerTabs)[number]>('Activity');
   const [pendingPolicyAction, setPendingPolicyAction] = useState<PendingPolicyAction | null>(null);
   const [copiedPrompt, setCopiedPrompt] = useState<string | null>(null);
+  const [isAgentPanelCollapsed, setIsAgentPanelCollapsed] = useState(false);
   const [isPaletteCollapsed, setIsPaletteCollapsed] = useState(false);
   const [showArchitecture, setShowArchitecture] = useState(false);
   const hasLoadedDemoTemplate = useRef(false);
 
   const activeScenario = scenarios.find((scenario) => scenario.id === activeScenarioId);
   const visibleProcess = activeScenario?.process ?? process;
+  const workspaceGridColumns = isPaletteCollapsed
+    ? selection
+      ? 'grid-cols-[4.5rem_minmax(0,1fr)_20rem]'
+      : isAgentPanelCollapsed
+        ? 'grid-cols-[4.5rem_minmax(0,1fr)_4.5rem]'
+        : 'grid-cols-[4.5rem_minmax(0,1fr)_20rem]'
+    : selection
+      ? 'grid-cols-[13rem_minmax(0,1fr)_20rem]'
+      : isAgentPanelCollapsed
+        ? 'grid-cols-[13rem_minmax(0,1fr)_4.5rem]'
+        : 'grid-cols-[13rem_minmax(0,1fr)_20rem]';
   const runHumanAction = useCallback(
     (action: () => void, operation: PolicyOperation) => {
       const warnings = checkPolicies(visibleProcess, operation);
@@ -147,14 +159,14 @@ export default function WorkspacePage() {
         </div>
       </header>
 
-      <div className={`grid min-h-0 ${isPaletteCollapsed ? 'grid-cols-[4.5rem_minmax(0,1fr)_20rem]' : 'grid-cols-[13rem_minmax(0,1fr)_20rem]'} gap-px bg-slate-200 transition-[grid-template-columns] duration-200`}>
+      <div className={`grid min-h-0 ${workspaceGridColumns} gap-px bg-slate-200 transition-[grid-template-columns] duration-200`}>
         <StepPalette collapsed={isPaletteCollapsed} nodeCount={visibleProcess.nodes.length} onToggle={() => setIsPaletteCollapsed((value) => !value)} scenarioId={activeScenario?.id} runHumanAction={runHumanAction} />
         <section className={`relative min-h-0 min-w-0 bg-slate-50 ${activeScenario ? 'ring-2 ring-inset ring-violet-400' : ''}`} aria-label="Process canvas area">
           {activeScenario ? <div className="absolute left-3 right-3 top-3 z-10 flex items-center justify-between rounded-lg bg-violet-700 px-3 py-2 text-xs font-medium text-white shadow-sm">Scenario: {activeScenario.title} · viewing branch <button type="button" onClick={() => setActiveScenarioId(null)} className="rounded-md bg-white/15 px-2 py-1 transition hover:bg-white/25">View main</button></div> : null}
           <ProcessCanvas process={visibleProcess} scenarioId={activeScenario?.id} onSelectionChange={setSelection} runHumanAction={runHumanAction} />
           {visibleProcess.nodes.length === 0 ? <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-y-auto p-6"><section className="pointer-events-auto w-full max-w-2xl rounded-2xl border border-slate-200 bg-white/95 px-6 py-6 shadow-[0_18px_50px_rgb(15_23_42/0.10)]" aria-labelledby="empty-state-title"><div className="text-center"><span className="mx-auto inline-flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white"><Sparkles size={18} /></span><h2 id="empty-state-title" className="mt-3 text-base font-semibold tracking-[-0.02em] text-slate-950">Build your first process</h2><p className="mx-auto mt-1 max-w-md text-sm leading-5 text-slate-500">Copy a demo prompt into ChatGPT or Codex to build, analyse, or optimise this process.</p></div><div className="mt-6 space-y-2">{demoPrompts.map((prompt) => <div key={prompt.label} className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-3 transition hover:border-slate-300 hover:bg-white"><div className="min-w-0 flex-1"><p className="pt-section-label">{prompt.label}</p><p className="mt-1 text-sm leading-5 text-slate-700">{prompt.text}</p></div><button type="button" onClick={() => void copyPrompt(prompt.label, prompt.text)} className="pt-subtle-control shrink-0 px-2.5 py-1.5 text-xs" aria-label={`Copy ${prompt.label} prompt to clipboard`}>{copiedPrompt === prompt.label ? <Check size={14} /> : <Copy size={14} />} {copiedPrompt === prompt.label ? 'Copied' : 'Copy'}</button></div>)}</div></section></div> : null}
         </section>
-        {selection ? <ProcessInspector process={visibleProcess} scenarioId={activeScenario?.id} selection={selection} runHumanAction={runHumanAction} /> : <WebMcpPanel />}
+        {selection ? <ProcessInspector process={visibleProcess} scenarioId={activeScenario?.id} selection={selection} runHumanAction={runHumanAction} /> : <WebMcpPanel collapsed={isAgentPanelCollapsed} onToggle={() => setIsAgentPanelCollapsed((value) => !value)} />}
       </div>
 
       <section className="min-h-0 min-w-0 border-t border-slate-200 bg-white shadow-[0_-1px_2px_rgb(15_23_42/0.02)]" aria-label="Workspace drawer">
