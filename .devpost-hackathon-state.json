@@ -18,10 +18,11 @@
     "ai_usage": "",
     "codex_usage": ""
   },
-  "current_stage": "prepare-submission",
+  "current_stage": "submit-project",
   "completed_stages": [
     "start-hackathon",
-    "review"
+    "review",
+    "submit-project"
   ],
   "rules_acknowledged": true,
   "learning": {
@@ -33,7 +34,8 @@
   },
   "submission": {
     "draft_file": "devpost-submission.md",
-    "status": "drafting"
+    "status": "submitted",
+    "project_url": "https://devpost.com/software/processtwin-pull-requests-for-application-state"
   },
-  "next_command": "prepare-submission"
+  "next_command": "hackathon-map"
 }
