@@ -57,7 +57,9 @@ https://github.com/ak1749/processtwin
 
 ## Demo Video
 
-TODO — public YouTube link required before Devpost submission. The planned video is under three minutes, includes audio, and demonstrates tool registration, semantic workflow construction, human-authored change awareness, simulation/bottleneck analysis, policy rejection, and human-only scenario merge.
+https://youtu.be/XFoOoyY01Tc
+
+The public video is under three minutes and includes audio. It demonstrates tool registration, semantic workflow construction, human-authored change awareness, simulation and bottleneck analysis, policy rejection, and a human-only scenario merge.
 
 ## Screenshot Shot List
 
@@ -73,7 +75,7 @@ TODO — public YouTube link required before Devpost submission. The planned vid
 - MIT license and runnable setup instructions are present in the repository.
 - The description explicitly covers WebMCP fit, user-experience improvement, human-agent collaboration, and implementation.
 - Dated commits within the challenge period document the WebMCP work.
-- A public YouTube demo and the participant-specific form answers are still required before submitting.
+- The Devpost entry, participant-specific form answers, and public YouTube demo were completed manually and verified live on September 2, 2026.
 
 ## Known Limitations
 
@@ -83,10 +85,4 @@ TODO — public YouTube link required before Devpost submission. The planned vid
 
 ## TODO Official Form Fields
 
-- Submitter type: **TODO — choose Individual, Team of Individuals, or Organization.**
-- Country of residence of submitter/team members: **TODO — participant-provided.**
-- App status: **New** (verify) or **Existing**; if Existing, explain the WebMCP additions made during the submission period.
-- Agents/clients tested: ChatGPT/Codex in-app browser is evidenced; add any others actually tested.
-- AI tools leveraged: **TODO — participant-confirmed list.**
-- Learning level: **TODO — choose None, Moderate, or Significant.**
-- Career value: **TODO — choose Yes or No.**
+Completed manually in Devpost. Participant-specific answers are intentionally not duplicated here.

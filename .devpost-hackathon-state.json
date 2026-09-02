@@ -35,7 +35,8 @@
   "submission": {
     "draft_file": "devpost-submission.md",
     "status": "submitted",
-    "project_url": "https://devpost.com/software/processtwin-pull-requests-for-application-state"
+    "project_url": "https://devpost.com/software/processtwin-pull-requests-for-application-state",
+    "video_url": "https://youtu.be/XFoOoyY01Tc"
   },
   "next_command": "hackathon-map"
 }
